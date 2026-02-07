@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microservice.Email.Core.Configuration;
 using Microservice.Email.Core.Exceptions;
 using Microservice.Email.Core.Interfaces;
+using Microservice.Email.Core.Metrics;
 
 using Minio;
 using Minio.DataModel.Args;
@@ -48,12 +49,16 @@ public sealed class FileStorageService : IFileStorageService
 
             await this.minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
+            EmailMetrics.RecordStorageOperation("upload", true);
+
             this.logger.LogInformation("Successfully uploaded file {FileName} to bucket {BucketName}", fileName, bucketName);
 
             return $"{bucketName}/{fileName}";
         }
         catch (Exception ex)
         {
+            EmailMetrics.RecordStorageOperation("upload", false);
+
             this.logger.LogError(ex, "Failed to upload file {FileName} to bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to upload file '{fileName}' to bucket '{bucketName}'.", ex);
         }
@@ -77,12 +82,16 @@ public sealed class FileStorageService : IFileStorageService
 
             await this.minioClient.GetObjectAsync(getObjectArgs, cancellationToken);
 
+            EmailMetrics.RecordStorageOperation("download", true);
+
             this.logger.LogInformation("Successfully downloaded file {FileName} from bucket {BucketName}", fileName, bucketName);
 
             return memoryStream;
         }
         catch (Exception ex)
         {
+            EmailMetrics.RecordStorageOperation("download", false);
+
             this.logger.LogError(ex, "Failed to download file {FileName} from bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to download file '{fileName}' from bucket '{bucketName}'.", ex);
         }
@@ -99,10 +108,14 @@ public sealed class FileStorageService : IFileStorageService
 
             await this.minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
 
+            EmailMetrics.RecordStorageOperation("delete", true);
+
             this.logger.LogInformation("Successfully removed file {FileName} from bucket {BucketName}", fileName, bucketName);
         }
         catch (Exception ex)
         {
+            EmailMetrics.RecordStorageOperation("delete", false);
+
             this.logger.LogError(ex, "Failed to remove file {FileName} from bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to remove file '{fileName}' from bucket '{bucketName}'.", ex);
         }

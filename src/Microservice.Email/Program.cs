@@ -1,6 +1,8 @@
 using Microservice.Email.Extensions;
 using Microservice.Email.Modules;
 
+using Prometheus;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services using modules
@@ -17,7 +19,17 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Microservice.Email API",
         Version = "v1",
-        Description = "Email delivery microservice with template support"
+        Description = "Email delivery microservice with template support. Provides REST API for sending emails, managing templates, and tracking delivery status.",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "API Support",
+            Email = "support@example.com"
+        },
+        License = new Microsoft.OpenApi.Models.OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        }
     });
 
     // Include XML comments
@@ -27,19 +39,29 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.IncludeXmlComments(xmlPath);
     }
+
+    // Add common response types documentation
+    options.CustomSchemaIds(type => (type.FullName ?? type.Name).Replace("+", "."));
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseGlobalExceptionHandler();
+// Enable Prometheus HTTP request metrics
+app.UseHttpMetrics(options =>
+{
+    options.AddCustomLabel("host", context => context.Request.Host.Host);
+});
 
+// Configure the HTTP request pipeline.
+app.UseGlobalExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Microservice.Email API v1");
+        options.DisplayRequestDuration();
     });
 }
 
@@ -48,5 +70,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map Prometheus metrics endpoint with restricted host access
+var metricsEndpoint = app.MapMetrics();
+metricsEndpoint.RequireHost("localhost", "127.0.0.1", "[::1]");
 
 app.Run();
