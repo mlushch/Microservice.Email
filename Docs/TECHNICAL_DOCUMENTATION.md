@@ -2,7 +2,7 @@
 
 ## Overview
 
-Microservice.Email is a robust email delivery service built on .NET 9. It provides multiple ways to send emails, including REST APIs and RabbitMQ message processing. It supports templated emails using Scriban and file attachments stored in MinIO. Also it have template managment system which allows to maintain email templates with help od React TS frontend application.
+Microservice.Email is a robust email delivery service built on .NET 9. It provides multiple ways to send emails, including REST APIs and RabbitMQ message processing. It supports templated emails using Scriban and file attachments stored in MinIO. It also has a template management system that allows you to maintain email templates with the help of a React TypeScript frontend application.
 
 ## Technology Stack (Backend)
 
@@ -18,8 +18,8 @@ Microservice.Email is a robust email delivery service built on .NET 9. It provid
 ## Technology Stack (Frontend)
 
 - **Library:** React v19.2
-- **State managment:** Redux v5.0.1
-- **Api Requests:** Axios v1.13.4
+- **State Management:** Redux v5.0.1
+- **API Requests:** Axios v1.13.4
 
 ## Project Structure (Backend)
 
@@ -73,7 +73,7 @@ The persistence layer uses PostgreSQL. The main entities are:
 | ------- | ----------------- | --------------------------- |
 | Id      | int (PK)          | Unique identifier           |
 | Path    | string            | Path to template in storage |
-| Name    | string (Unique)   | Tamplate name               |
+| Name    | string (Unique)   | Template name               |
 | Size    | int               | Template size in KB         |
 
 ## API
@@ -93,9 +93,9 @@ Base Route: `/api/email-templates`
 
 | Method | Endpoint                    | Description                                       |
 | ------ | --------------------------- | ------------------------------------------------- |
-| GET    | `/all`                      | Get list of all template                          |
-| POST   | ``                          | Create new email template                         |
-| DELETE | ``                          | Delete existing email template                    |
+| GET    | `/all`                      | Get list of all templates                         |
+| POST   | `/`                         | Create new email template                         |
+| DELETE | `/{templateId}`             | Delete existing email template                    |
 
 ## API Contracts
 

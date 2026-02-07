@@ -8,15 +8,14 @@ This document outlines the coding standards and best practices for the Microserv
 - **SOLID Principles:** Adhere to SOLID design principles for robust and extensible code.
 - **Sealed Classes:** Use `sealed` by default for all classes unless inheritance is explicitly required.
 - **Immutability:** Favor immutable data structures. Use `init` properties for DTOs and Contracts.
-- **Async/Await:** Use asynchronous programming throughout the application for better scalability. Always use `Task` as return type for async methods.
+- **Async/Await:** Use asynchronous programming throughout the application for better scalability. Use `Task` for async methods that do not return a value, `Task<T>` for async methods that return a result, and reserve `ValueTask`/`ValueTask<T>` for proven performance-critical scenarios.
 
 ## 2. Naming Conventions
 
 ### 2.1 General Naming
 - **PascalCase:** Classes, Methods, Properties, Public Fields, Enums, Namespaces.
 - **camelCase:** Method arguments, Local variables.
-- **camelCase with `_` prefix:** Private fields (e.g., `private readonly IEmailService _emailService;` - *Note: The project also uses `this.emailService` pattern with plain camelCase fields in some places, but `_` is a common standard*). 
-  *Update based on existing code:* Use **camelCase** for private fields and access them via `this.` in constructors (e.g., `this.emailService = emailService;`).
+- **camelCase (no `_` prefix):** Private fields should use plain camelCase and typically be assigned via `this.` in constructors (e.g., `private readonly IEmailService emailService;` and `this.emailService = emailService;`).
 
 ### 2.2 Specific Naming
 - **Interfaces:** Prefix with `I` (e.g., `IEmailService`).
@@ -28,8 +27,7 @@ This document outlines the coding standards and best practices for the Microserv
 ## 3. Formatting & Syntax
 
 - **Indentation:** Use 4 spaces (standard for C#).
-- **Braces:** Use K&R style or Allman style? 
-  *Based on code:* Use **Allman style** (braces on a new line) for classes, methods, and complex statements.
+- **Braces:** Use Allman style for classes, methods, and complex statements.
 - **File-Scoped Namespaces:** Use file-scoped namespaces to reduce nesting.
 - **Var Keyword:** Use `var` when the type is obvious from the right side of the assignment (e.g., `var result = new List<string>();`). Use explicit types when it's not (e.g., `int count = GetCount();`).
 - **Expression-Bodied Members:** Use for simple one-line properties or methods.

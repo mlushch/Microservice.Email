@@ -43,7 +43,7 @@ The REST API is exposed at `/api/email`.
 - **Request Body:** `CreateEmailTemplateRequest`
 - **Response:** `NoContent on success`
 
-#### Create template
+#### Delete template
 
 - **URL:** `DELETE /api/email-templates/{templateId}`
 - **Response:** `NoContent on success`
@@ -121,7 +121,7 @@ The REST API is exposed at `/api/email`.
   "id": "int",
   "name": "string",
   "path": "string",
-  "size": "string"
+  "size": "int"
 }
 ```
 
@@ -137,7 +137,7 @@ The REST API is exposed at `/api/email`.
 
 ---
 
-## 3. RabbitMQ Messaging
+## 2. RabbitMQ Messaging
 
 The service consumes messages from RabbitMQ for asynchronous email processing.
 
