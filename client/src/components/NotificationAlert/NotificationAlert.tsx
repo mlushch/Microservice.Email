@@ -5,17 +5,20 @@ import { useAppDispatch, useAppSelector, selectNotifications, removeNotification
 export const NotificationAlert = () => {
   const dispatch = useAppDispatch();
   const notifications = useAppSelector(selectNotifications);
+  const currentNotificationId = notifications[0]?.id;
 
   // Auto-remove notifications after 5 seconds
   useEffect(() => {
-    if (notifications.length > 0) {
-      const timer = setTimeout(() => {
-        dispatch(removeNotification(notifications[0].id));
-      }, 5000);
-      return () => clearTimeout(timer);
+    if (!currentNotificationId) {
+      return;
     }
-  }, [notifications, dispatch]);
 
+    const timer = setTimeout(() => {
+      dispatch(removeNotification(currentNotificationId));
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [currentNotificationId, dispatch]);
   const handleClose = (id: string) => {
     dispatch(removeNotification(id));
   };
