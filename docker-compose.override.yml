@@ -10,11 +10,11 @@ services:
       - ./src/Microservice.Email/appsettings.Development.json:/app/appsettings.Development.json:ro
 
   frontend:
-    # Override for development - use vite dev server instead
+    # Frontend service override for development (build configuration only)
     build:
       context: ./client
       dockerfile: Dockerfile
-    # Development port remains 3000
+    # Port mappings for the frontend are configured in docker-compose.yml
 
   # Enable Swagger UI in development
   swagger-ui:
@@ -23,7 +23,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SWAGGER_JSON_URL=http://localhost:5000/swagger/v1/swagger.json
+      - SWAGGER_JSON_URL=http://backend:5000/swagger/v1/swagger.json
     networks:
       - microservice-network
     depends_on:

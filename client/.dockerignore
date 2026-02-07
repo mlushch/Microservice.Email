@@ -27,7 +27,8 @@ coverage/
 
 # Docker
 Dockerfile*
-.dockerignore
+!Dockerfile
+!.dockerignore
 docker-compose*.yml
 
 # Misc
