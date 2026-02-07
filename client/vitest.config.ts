@@ -20,7 +20,7 @@ export default defineConfig({
       },
     },
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/test/**', 'src/main.tsx', 'src/vite-env.d.ts'],
