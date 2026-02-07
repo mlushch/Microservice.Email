@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservice.Email", "Microservice.Email\Microservice.Email.csproj", "{16B6A63A-6614-4167-80E4-EEFC72CC1F86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microservice.Email.Tests", "Microservice.Email.Tests\Microservice.Email.Tests.csproj", "{12733165-7333-4C91-AD88-1066A8254139}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservice.Email.Tests", "Microservice.Email.Tests\Microservice.Email.Tests.csproj", "{12733165-7333-4C91-AD88-1066A8254139}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -361,7 +361,7 @@ public sealed class SmtpServiceTests
     }
 
     [Fact]
-    public async Task SendAsync_WithEmptySenderEmail_ThrowsEmailSendException()
+    public async Task SendAsync_WithNullSenderEmail_ThrowsEmailSendException()
     {
         // Arrange
         var settings = new SmtpSettings

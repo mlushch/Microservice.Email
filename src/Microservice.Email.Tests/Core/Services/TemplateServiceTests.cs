@@ -372,7 +372,7 @@ public sealed class TemplateServiceTests : TestBase
         await dbContext.SaveChangesAsync();
 
         var templateContent = "<html><body>Hello {{ name }}!</body></html>";
-        var templateStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(templateContent));
+
 
         this.mockFileStorageService
             .Setup(s => s.DownloadAsync(
@@ -478,7 +478,7 @@ public sealed class TemplateServiceTests : TestBase
     private static Mock<IFormFile> CreateMockFormFile(string fileName, string content)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var stream = new MemoryStream(bytes);
+
 
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.OpenReadStream()).Returns(() => new MemoryStream(bytes));
