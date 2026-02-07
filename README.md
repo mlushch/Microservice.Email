@@ -1,9 +1,10 @@
 # Microservice.Email
 
 Used AI-assisted tooling:
-GPT-5.2 - for creating tasks from project documentation, readme(s)
-Claude Haiku 4.5/Claude Opus 4.5 - for building project codebase, covering project by unit tests
-Used code review tools provided by copilot.
+1. GPT-5.2 - for creating tasks from project documentation, readme(s)
+2. Claude Haiku 4.5/Claude Opus 4.5 - for building project codebase, covering project by unit tests
+3. Used code review tools provided by copilot.
+4. Used github-mcp-server to resolve some pipeline issues.
 
 Step by step project workflow:
 

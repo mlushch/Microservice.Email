@@ -1,25 +1,28 @@
-/// <reference types="vitest" />
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the apiClient module before importing templateService
-vi.mock('../../services/api', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    delete: vi.fn(),
-  },
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    delete: vi.fn(),
-  },
-  parseApiError: vi.fn(),
+// Create shared mock functions using vi.hoisted to ensure they exist before mock factory runs
+const { mockGet, mockPost, mockDelete } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockDelete: vi.fn(),
 }));
+
+// Mock the apiClient module before importing templateService
+vi.mock('../../services/api', () => {
+  const apiClientMock = {
+    get: mockGet,
+    post: mockPost,
+    delete: mockDelete,
+  };
+  return {
+    apiClient: apiClientMock,
+    default: apiClientMock,
+    parseApiError: vi.fn(),
+  };
+});
 
 // Import after mock setup
 import { templateService } from '../../services/templateService';
-import apiClient from '../../services/api';
 
 describe('Template Service', () => {
   beforeEach(() => {
@@ -33,17 +36,17 @@ describe('Template Service', () => {
         { id: 2, name: 'Template 2', path: '/path2', size: 2048 },
       ];
       
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockTemplates });
+      mockGet.mockResolvedValue({ data: mockTemplates });
 
       const result = await templateService.getAll();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/email-templates/all');
+      expect(mockGet).toHaveBeenCalledWith('/api/email-templates/all');
       expect(result).toEqual(mockTemplates);
     });
 
     it('should throw error when fetch fails', async () => {
       const error = new Error('Failed to fetch');
-      vi.mocked(apiClient.get).mockRejectedValue(error);
+      mockGet.mockRejectedValue(error);
 
       await expect(templateService.getAll()).rejects.toThrow('Failed to fetch');
     });
@@ -58,11 +61,11 @@ describe('Template Service', () => {
         file,
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue({});
+      mockPost.mockResolvedValue({});
 
       await templateService.create(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         '/api/email-templates',
         expect.any(FormData),
         { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -72,16 +75,16 @@ describe('Template Service', () => {
 
   describe('delete', () => {
     it('should delete a template by ID', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue({});
+      mockDelete.mockResolvedValue({});
 
       await templateService.delete(1);
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/api/email-templates/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/email-templates/1');
     });
 
     it('should throw error when delete fails', async () => {
       const error = new Error('Failed to delete');
-      vi.mocked(apiClient.delete).mockRejectedValue(error);
+      mockDelete.mockRejectedValue(error);
 
       await expect(templateService.delete(1)).rejects.toThrow('Failed to delete');
     });
