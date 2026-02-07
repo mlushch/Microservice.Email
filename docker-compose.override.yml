@@ -1,0 +1,30 @@
+# Docker Compose Override for Development
+# This file extends docker-compose.yml for development purposes
+
+services:
+  backend:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      # Mount source for hot-reload during development
+      - ./src/Microservice.Email/appsettings.Development.json:/app/appsettings.Development.json:ro
+
+  frontend:
+    # Frontend service override for development (build configuration only)
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    # Port mappings for the frontend are configured in docker-compose.yml
+
+  # Enable Swagger UI in development
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: microservice-email-swagger
+    ports:
+      - "8080:8080"
+    environment:
+      - SWAGGER_JSON_URL=http://backend:5000/swagger/v1/swagger.json
+    networks:
+      - microservice-network
+    depends_on:
+      - backend

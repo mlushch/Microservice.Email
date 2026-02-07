@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build results
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# Test results
+**/TestResults/
+
+# NuGet
+*.nupkg
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+**/Dockerfile*
+!Dockerfile
+**/.dockerignore
+docker-compose*.yml
+
+# Misc
+**/*.log
+**/*.swp
+**/._*
+**/.DS_Store
+Thumbs.db
