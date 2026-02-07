@@ -1,5 +1,3 @@
-/// <reference types="vitest" />
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the apiClient module before importing templateService

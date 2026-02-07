@@ -1,5 +1,3 @@
-/// <reference types="vitest" />
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AxiosError } from 'axios';
 import { parseApiError } from '../../services/api';
