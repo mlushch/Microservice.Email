@@ -22,6 +22,6 @@ public sealed class RecipientEntity
 
     /// <summary>
     /// Gets or sets the associated email entity.
-    /// </summary>
-    public required EmailEntity Email_Navigation { get; set; }
+/// </summary>
+    public required EmailEntity EmailEntity { get; set; }
 }

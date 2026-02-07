@@ -1,5 +1,5 @@
 using Microservice.Email.Domain.Entities;
-using Microservice.Email.Infrastructure.Persistence.EntityConfigurations;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Microservice.Email.Infrastructure.Persistence;
@@ -33,7 +33,7 @@ public sealed class EmailDbContext : DbContext
     public DbSet<EmailTemplateEntity> EmailTemplates { get; set; }
 
     /// <summary>
-    /// Configures the database (connection string) and model building options.
+    /// Configures the entity mappings and model-building conventions for the EmailDbContext.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,7 +42,5 @@ public sealed class EmailDbContext : DbContext
         // Apply entity configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmailDbContext).Assembly);
 
-        // Configure naming convention to use snake_case for tables and columns
-        modelBuilder.UseSnakeCaseNamingConvention();
     }
 }

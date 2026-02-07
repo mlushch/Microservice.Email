@@ -43,9 +43,5 @@ public sealed class EmailEntityConfiguration : IEntityTypeConfiguration<EmailEnt
             .IsRequired()
             .HasConversion<int>();
 
-        builder.HasMany(e => e.Recipients)
-            .WithOne(r => r.Email_Navigation)
-            .HasForeignKey(r => r.EmailId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }
