@@ -9,17 +9,17 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=microservice_email;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=microservice_email;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - Minio__Endpoint=minio:9000
-      - Minio__AccessKey=minioadmin
-      - Minio__SecretKey=minioadmin
+      - Minio__AccessKey=${MINIO_ACCESS_KEY}
+      - Minio__SecretKey=${MINIO_SECRET_KEY}
       - Minio__UseSSL=false
       - Minio__AttachmentsBucket=attachments
       - Minio__TemplatesBucket=templates
       - RabbitMq__HostName=rabbitmq
       - RabbitMq__Port=5672
-      - RabbitMq__Username=guest
-      - RabbitMq__Password=guest
+      - RabbitMq__Username=${RABBITMQ_USERNAME}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
       - RabbitMq__VirtualHost=/
       - RabbitMq__EmailQueueName=email-queue
       - RabbitMq__TemplatedEmailQueueName=templated-email-queue
