@@ -99,7 +99,7 @@ Thumbs.db
 .DS_Store
 
 ## Package manager
-package-lock.json
+# package-lock.json should be committed for CI/CD consistency
 yarn.lock
 pnpm-lock.yaml
 
