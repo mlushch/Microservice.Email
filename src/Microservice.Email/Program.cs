@@ -41,7 +41,7 @@ builder.Services.AddSwaggerGen(options =>
     }
 
     // Add common response types documentation
-    options.CustomSchemaIds(type => type.FullName);
+    options.CustomSchemaIds(type => (type.FullName ?? type.Name).Replace("+", "."));
 });
 
 var app = builder.Build();
@@ -52,7 +52,8 @@ app.UseGlobalExceptionHandler();
 // Enable Prometheus HTTP request metrics
 app.UseHttpMetrics(options =>
 {
-    options.AddCustomLabel("host", context => context.Request.Host.Host);
+    // Use a bounded value for the "host" label to avoid high-cardinality time series
+    options.AddCustomLabel("host", _ => "microservice-email");
 });
 
 if (app.Environment.IsDevelopment())
@@ -71,7 +72,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Map Prometheus metrics endpoint
-app.MapMetrics();
+// Map Prometheus metrics endpoint with restricted host access
+var metricsEndpoint = app.MapMetrics();
+metricsEndpoint.RequireHost("localhost", "127.0.0.1", "[::1]");
 
 app.Run();
