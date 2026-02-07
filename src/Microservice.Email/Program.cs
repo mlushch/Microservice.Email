@@ -47,15 +47,14 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseGlobalExceptionHandler();
-
 // Enable Prometheus HTTP request metrics
 app.UseHttpMetrics(options =>
 {
-    // Use a bounded value for the "host" label to avoid high-cardinality time series
-    options.AddCustomLabel("host", _ => "microservice-email");
+    options.AddCustomLabel("host", context => context.Request.Host.Host);
 });
 
+// Configure the HTTP request pipeline.
+app.UseGlobalExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
