@@ -2,7 +2,7 @@
 
 Used AI-assisted tooling:
 GPT-5.2 - for creating tasks from project documentation, readme(s)
-Claude Haiku 4.5 - for building project codebase, covering project by unit tests
+Claude Haiku 4.5/Claude Opus 4.5 - for building project codebase, covering project by unit tests
 Used code review tools provided by copilot.
 
 Step by step project workflow:

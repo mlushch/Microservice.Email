@@ -17,10 +17,10 @@ namespace Microservice.Email.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "7.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumn(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microservice.Email.Domain.Entities.EmailEntity", b =>
                 {
@@ -129,14 +129,14 @@ namespace Microservice.Email.Infrastructure.Persistence.Migrations
                     b.HasIndex("EmailId")
                         .HasDatabaseName("ix_recipients_email_id");
 
-                    b.HasOne("Microservice.Email.Domain.Entities.EmailEntity", "Email_Navigation")
+                    b.HasOne("Microservice.Email.Domain.Entities.EmailEntity", "EmailEntity")
                         .WithMany("Recipients")
                         .HasForeignKey("EmailId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_recipients_emails_email_id");
 
-                    b.Navigation("Email_Navigation");
+                    b.Navigation("EmailEntity");
                 });
 
             modelBuilder.Entity("Microservice.Email.Domain.Entities.EmailEntity", b =>

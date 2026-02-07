@@ -1,3 +1,5 @@
+using Microservice.Email.Domain.Enums;
+
 namespace Microservice.Email.Domain.Entities;
 
 /// <summary>
