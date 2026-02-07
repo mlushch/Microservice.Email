@@ -42,10 +42,9 @@ public sealed class InfrastructureModule : IModule
 
                 return client.Build();
             });
+
+            services.AddScoped<IFileStorageService, FileStorageService>();
         }
-
-        services.AddScoped<IFileStorageService, FileStorageService>();
-
         // SMTP configuration
         services.Configure<SmtpSettings>(configuration.GetSection(SmtpSettings.SectionName));
 
