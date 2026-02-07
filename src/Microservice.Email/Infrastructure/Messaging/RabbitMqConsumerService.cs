@@ -75,6 +75,10 @@ public sealed class RabbitMqConsumerService : BackgroundService
             VirtualHost = this.settings.VirtualHost
         };
 
+        if (this.settings.UseSsl)
+        {
+            factory.Ssl.Enabled = true;
+        }
         this.connection = await factory.CreateConnectionAsync(cancellationToken);
 
         this.emailChannel = await this.connection.CreateChannelAsync(cancellationToken: cancellationToken);
