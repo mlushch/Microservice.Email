@@ -1,7 +1,7 @@
 # Task 8: Configure MinIO File Storage
 
 ## Description
-Setup MinIO S3-compatible storage for email attachments and templates.
+Set up MinIO S3-compatible storage for email attachments and templates.
 
 ## Requirements
 - Configure MinIO client in `Infrastructure/`
