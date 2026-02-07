@@ -27,7 +27,7 @@ public sealed class RecipientEntityConfiguration : IEntityTypeConfiguration<Reci
         builder.Property(e => e.EmailId)
             .IsRequired();
 
-        builder.HasOne(e => e.Email_Navigation)
+        builder.HasOne(e => e.EmailEntity)
             .WithMany(e => e.Recipients)
             .HasForeignKey(e => e.EmailId)
             .OnDelete(DeleteBehavior.Cascade);
