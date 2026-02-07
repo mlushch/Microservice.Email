@@ -8,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services using modules
 builder.Services.AddModules(builder.Configuration);
 
+// Add health checks
+builder.Services.AddHealthChecks();
+
 // Add controllers
 builder.Services.AddControllers();
 
@@ -70,6 +73,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 // Map Prometheus metrics endpoint with restricted host access
 var metricsEndpoint = app.MapMetrics();
