@@ -1,5 +1,8 @@
+using System.Diagnostics;
+
 using Microservice.Email.Core.Exceptions;
 using Microservice.Email.Core.Interfaces;
+using Microservice.Email.Core.Metrics;
 using Microservice.Email.Domain.Contracts;
 using Microservice.Email.Domain.Entities;
 using Microservice.Email.Domain.Enums;
@@ -45,6 +48,9 @@ public sealed class EmailService : IEmailService
     /// <inheritdoc />
     public async Task<EmailResponse> SendAsync(AttachmentsWrapper<SendEmailRequest> request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
+        const string templateName = "plain";
+
         var validationResult = this.emailValidator.Validate(request.Email);
         if (!validationResult.IsValid)
         {
@@ -87,10 +93,15 @@ public sealed class EmailService : IEmailService
             emailEntity.SentDate = DateTimeOffset.UtcNow;
             await this.dbContext.SaveChangesAsync(cancellationToken);
 
+            stopwatch.Stop();
+            EmailMetrics.RecordEmailSent(templateName, stopwatch.Elapsed);
+
             this.logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", request.Email.Recipients));
         }
         catch (Exception ex)
         {
+            EmailMetrics.RecordEmailFailed(templateName);
+
             this.logger.LogError(ex, "Failed to send email to {Recipients}", string.Join(", ", request.Email.Recipients));
             emailEntity.EmailStatus = EmailStatus.Failed;
             await this.dbContext.SaveChangesAsync(cancellationToken);
@@ -103,6 +114,8 @@ public sealed class EmailService : IEmailService
     /// <inheritdoc />
     public async Task<EmailResponse> SendTemplatedAsync(AttachmentsWrapper<SendTemplatedEmailRequest> request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         var validationResult = this.templatedEmailValidator.Validate(request.Email);
         if (!validationResult.IsValid)
         {
@@ -152,11 +165,16 @@ public sealed class EmailService : IEmailService
             emailEntity.SentDate = DateTimeOffset.UtcNow;
             await this.dbContext.SaveChangesAsync(cancellationToken);
 
+            stopwatch.Stop();
+            EmailMetrics.RecordEmailSent(request.Email.TemplateName, stopwatch.Elapsed);
+
             this.logger.LogInformation("Templated email sent successfully to {Recipients} using template {TemplateName}",
                 string.Join(", ", request.Email.Recipients), request.Email.TemplateName);
         }
         catch (Exception ex)
         {
+            EmailMetrics.RecordEmailFailed(request.Email.TemplateName);
+
             this.logger.LogError(ex, "Failed to send templated email to {Recipients} using template {TemplateName}",
                 string.Join(", ", request.Email.Recipients), request.Email.TemplateName);
             emailEntity.EmailStatus = EmailStatus.Failed;

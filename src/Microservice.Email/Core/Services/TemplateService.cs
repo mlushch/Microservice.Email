@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microservice.Email.Core.Configuration;
 using Microservice.Email.Core.Exceptions;
 using Microservice.Email.Core.Interfaces;
+using Microservice.Email.Core.Metrics;
 using Microservice.Email.Domain.Contracts;
 using Microservice.Email.Domain.Entities;
 using Microservice.Email.Domain.Models;
@@ -51,6 +52,8 @@ public sealed class TemplateService : ITemplateService
     /// <inheritdoc />
     public async Task<IReadOnlyList<EmailTemplateResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
+        EmailMetrics.RecordTemplateOperation("get_all");
+
         var templates = await this.dbContext.EmailTemplates
             .AsNoTracking()
             .OrderBy(t => t.Name)
@@ -112,6 +115,8 @@ public sealed class TemplateService : ITemplateService
         this.dbContext.EmailTemplates.Add(templateEntity);
         await this.dbContext.SaveChangesAsync(cancellationToken);
 
+        EmailMetrics.RecordTemplateOperation("create");
+
         this.logger.LogInformation("Created email template {TemplateName}", request.Name);
     }
 
@@ -137,6 +142,8 @@ public sealed class TemplateService : ITemplateService
 
         // Invalidate cache
         this.cache.Remove(GetCacheKey(template.Name));
+
+        EmailMetrics.RecordTemplateOperation("delete");
 
         this.logger.LogInformation("Deleted email template {TemplateName}", template.Name);
     }

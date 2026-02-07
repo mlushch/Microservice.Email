@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 
 using Microservice.Email.Core.Exceptions;
+using Microservice.Email.Core.Metrics;
 
 namespace Microservice.Email.Extensions;
 
@@ -39,55 +40,63 @@ public sealed class GlobalExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var (statusCode, response) = exception switch
+        // Get or create request ID for correlation
+        var requestId = context.TraceIdentifier;
+        var timestamp = DateTimeOffset.UtcNow;
+
+        // Record exception metric
+        EmailMetrics.RecordException(exception.GetType().Name);
+
+        var (statusCode, errorCode, message, errors) = exception switch
         {
             ValidationException validationEx => (
                 HttpStatusCode.BadRequest,
-                new ErrorResponse
+                "VALIDATION_ERROR",
+                "Validation failed",
+                validationEx.Errors.Select(e => new ErrorDetail
                 {
-                    Message = "Validation failed",
-                    Errors = validationEx.Errors.Select(e => new ErrorDetail
-                    {
-                        Property = e.PropertyName,
-                        Message = e.ErrorMessage
-                    }).ToList()
-                }),
+                    Property = e.PropertyName,
+                    Message = e.ErrorMessage
+                }).ToList()),
 
             TemplateNotFoundException templateEx => (
                 HttpStatusCode.NotFound,
-                new ErrorResponse
-                {
-                    Message = templateEx.Message
-                }),
+                "TEMPLATE_NOT_FOUND",
+                templateEx.Message,
+                (List<ErrorDetail>?)null),
 
             FileStorageException fileEx => (
                 HttpStatusCode.ServiceUnavailable,
-                new ErrorResponse
+                "STORAGE_UNAVAILABLE",
+                "File storage service is unavailable",
+                new List<ErrorDetail>
                 {
-                    Message = "File storage service is unavailable",
-                    Errors = new List<ErrorDetail>
-                    {
-                        new() { Property = "FileStorage", Message = fileEx.Message }
-                    }
+                    new() { Property = "FileStorage", Message = fileEx.Message }
                 }),
 
             EmailSendException emailEx => (
                 HttpStatusCode.ServiceUnavailable,
-                new ErrorResponse
+                "EMAIL_SERVICE_UNAVAILABLE",
+                "Email service is unavailable",
+                new List<ErrorDetail>
                 {
-                    Message = "Email service is unavailable",
-                    Errors = new List<ErrorDetail>
-                    {
-                        new() { Property = "Email", Message = emailEx.Message }
-                    }
+                    new() { Property = "Email", Message = emailEx.Message }
                 }),
 
             _ => (
                 HttpStatusCode.InternalServerError,
-                new ErrorResponse
-                {
-                    Message = "An unexpected error occurred"
-                })
+                "INTERNAL_ERROR",
+                "An unexpected error occurred",
+                (List<ErrorDetail>?)null)
+        };
+
+        var response = new ErrorResponse
+        {
+            Message = message,
+            ErrorCode = errorCode,
+            RequestId = requestId,
+            Timestamp = timestamp,
+            Errors = errors
         };
 
         if (statusCode == HttpStatusCode.InternalServerError)
@@ -121,6 +130,21 @@ public sealed class ErrorResponse
     /// Gets or sets the error message.
     /// </summary>
     public required string Message { get; init; }
+
+    /// <summary>
+    /// Gets or sets the error code for categorization.
+    /// </summary>
+    public required string ErrorCode { get; init; }
+
+    /// <summary>
+    /// Gets or sets the request ID for correlation.
+    /// </summary>
+    public required string RequestId { get; init; }
+
+    /// <summary>
+    /// Gets or sets the timestamp when the error occurred.
+    /// </summary>
+    public required DateTimeOffset Timestamp { get; init; }
 
     /// <summary>
     /// Gets or sets the detailed errors.
