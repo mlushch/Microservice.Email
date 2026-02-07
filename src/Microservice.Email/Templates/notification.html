@@ -40,7 +40,7 @@
         <p>{{ greeting }}</p>
         {{ end }}
         <div>
-            {{ body }}
+            {{ body | html.escape }}
         </div>
         {{ if action_url }}
         <p style="text-align: center; margin-top: 20px;">
