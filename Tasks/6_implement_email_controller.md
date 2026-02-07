@@ -8,9 +8,9 @@ Create REST API controller with endpoints for sending emails and managing email 
 - Implement endpoints:
   - `POST /api/email/send` - Send plain email with attachments
   - `POST /api/email/send/templated` - Send templated email
-  - `POST /api/email/send/formFiles` - Send plain email with form-data attachments
-  - `POST /api/email/send/templated/formFiles` - Send templated email with form-data attachments
-  - `GET /api/email-templates/all` - Get all templates
+  - `POST /api/email/send/form-files` - Send plain email with form-data attachments
+  - `POST /api/email/send/templated/form-files` - Send templated email with form-data attachments
+  - `GET /api/email-templates` - Get all templates
   - `POST /api/email-templates` - Create new template
   - `DELETE /api/email-templates/{templateId}` - Delete template
 - Use dependency injection for services

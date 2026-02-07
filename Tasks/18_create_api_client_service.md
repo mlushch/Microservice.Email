@@ -7,7 +7,7 @@ Implement Axios-based API client for communicating with the backend microservice
 - Create `services/api.ts` for Axios configuration
 - Configure base URL from environment variables
 - Implement API service for:
-  - `GET /api/email-templates/all` - Fetch all templates
+  - `GET /api/email-templates` - Fetch all templates
   - `POST /api/email-templates` - Create new template
   - `DELETE /api/email-templates/{templateId}` - Delete template
 - Add request/response interceptors:
