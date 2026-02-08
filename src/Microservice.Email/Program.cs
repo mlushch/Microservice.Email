@@ -8,7 +8,7 @@ using Serilog.Events;
 
 // Configure Serilog bootstrap logger for startup
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .CreateBootstrapLogger();
@@ -23,10 +23,7 @@ try
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
-        .Enrich.WithThreadId()
-        .Enrich.WithProperty("Application", "Microservice.Email"));
+        .Enrich.FromLogContext());
 
     // Add services using modules
     builder.Services.AddModules(builder.Configuration);
