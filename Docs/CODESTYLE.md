@@ -16,7 +16,7 @@ This document outlines the coding standards and best practices for the Microserv
 
 - **PascalCase:** Classes, Methods, Properties, Public Fields, Enums, Namespaces.
 - **camelCase:** Method arguments, Local variables.
-- **camelCase (no `_` prefix):** Private fields should use plain camelCase and typically be assigned via `this.` in constructors (e.g., `private readonly IEmailService emailService;` and `this.emailService = emailService;`). For other cases `this.` should be removed (e.g. `await emailService.SendAsync(...)`).
+- **camelCase (no `_` prefix):** Private fields should use plain camelCase and typically be assigned via `this.` in constructors when assigning constructor parameters to fields (e.g., `private readonly IEmailService emailService;` and `this.emailService = emailService;`). When referencing instance fields or properties in methods, omit `this.` unless required for disambiguation or clarity (e.g., `await emailService.SendAsync(...)`).
 
 ### 2.2 Specific Naming
 
@@ -57,5 +57,5 @@ This document outlines the coding standards and best practices for the Microserv
 
 ### 4.4 Documentation
 
-- Use XML documentation comments (`///`) for public APIs, complex methods, and interfaces.
+- Use XML documentation comments (`///`) for public APIs, complex methods, and interfaces. Trivial constructors used only for dependency injection, and trivial exception constructors, are exempt from this requirement.
 - Keep `CONTRACTS.md` and `TECHNICAL_DOCUMENTATION.md` updated with any API or architectural changes.
