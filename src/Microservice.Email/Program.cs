@@ -21,8 +21,9 @@ try
 
     // Add additional configuration sources
     // JSON configuration is added by default
-    // Environment variables with "EMAIL_" prefix are mapped to configuration
+    // Environment variables are mapped to configuration (both standard and "EMAIL_" prefixed)
     builder.Configuration
+        .AddEnvironmentVariables()
         .AddEnvironmentVariables("EMAIL_")
         .AddUserSecrets<Program>(optional: true);
 
