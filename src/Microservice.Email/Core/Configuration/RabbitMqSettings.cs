@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Microservice.Email.Core.Configuration;
 
 /// <summary>
@@ -13,11 +15,13 @@ public sealed class RabbitMqSettings
     /// <summary>
     /// Gets or sets the RabbitMQ host name.
     /// </summary>
+    [Required(ErrorMessage = "RabbitMQ host name is required")]
     public required string HostName { get; init; }
 
     /// <summary>
     /// Gets or sets the RabbitMQ port.
     /// </summary>
+    [Range(1, 65535, ErrorMessage = "RabbitMQ port must be between 1 and 65535")]
     public int Port { get; init; } = 5672;
 
     /// <summary>
@@ -38,11 +42,13 @@ public sealed class RabbitMqSettings
     /// <summary>
     /// Gets or sets the queue name for plain email messages.
     /// </summary>
+    [Required(ErrorMessage = "Email queue name is required")]
     public string EmailQueueName { get; init; } = "email-queue";
 
     /// <summary>
     /// Gets or sets the queue name for templated email messages.
     /// </summary>
+    [Required(ErrorMessage = "Templated email queue name is required")]
     public string TemplatedEmailQueueName { get; init; } = "templated-email-queue";
 
     /// <summary>

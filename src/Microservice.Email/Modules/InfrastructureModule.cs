@@ -23,9 +23,8 @@ public sealed class InfrastructureModule : IModule
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection services, IConfiguration configuration)
     {
-        // MinIO configuration
-        services.Configure<MinioSettings>(configuration.GetSection(MinioSettings.SectionName));
-
+        // MinIO client registration
+        // Note: Configuration binding with validation is done in ConfigurationExtensions
         var minioSettings = configuration.GetSection(MinioSettings.SectionName).Get<MinioSettings>();
         if (minioSettings is not null)
         {
@@ -45,9 +44,9 @@ public sealed class InfrastructureModule : IModule
 
             services.AddScoped<IFileStorageService, FileStorageService>();
         }
-        // SMTP configuration
-        services.Configure<SmtpSettings>(configuration.GetSection(SmtpSettings.SectionName));
-
+        
+        // SMTP client registration
+        // Note: Configuration binding with validation is done in ConfigurationExtensions
         var smtpSettings = configuration.GetSection(SmtpSettings.SectionName).Get<SmtpSettings>();
         if (smtpSettings is not null)
         {
@@ -74,9 +73,8 @@ public sealed class InfrastructureModule : IModule
 
         services.AddScoped<ISmtpService, SmtpService>();
 
-        // RabbitMQ configuration
-        services.Configure<RabbitMqSettings>(configuration.GetSection(RabbitMqSettings.SectionName));
-
+        // RabbitMQ services registration
+        // Note: Configuration binding with validation is done in ConfigurationExtensions
         services.AddScoped<IMessageHandler<AttachmentsWrapper<SendEmailRequest>>, SendEmailMessageHandler>();
         services.AddScoped<IMessageHandler<AttachmentsWrapper<SendTemplatedEmailRequest>>, SendTemplatedEmailMessageHandler>();
         services.AddHostedService<RabbitMqConsumerService>();

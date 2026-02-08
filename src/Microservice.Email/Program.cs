@@ -19,11 +19,22 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Add additional configuration sources
+    // JSON configuration is added by default
+    // Environment variables are mapped to configuration (both standard and "EMAIL_" prefixed)
+    builder.Configuration
+        .AddEnvironmentVariables()
+        .AddEnvironmentVariables("EMAIL_")
+        .AddUserSecrets<Program>(optional: true);
+
     // Configure Serilog from configuration
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
+
+    // Add configuration with validation
+    builder.Services.AddApplicationConfiguration(builder.Configuration);
 
     // Add services using modules
     builder.Services.AddModules(builder.Configuration);

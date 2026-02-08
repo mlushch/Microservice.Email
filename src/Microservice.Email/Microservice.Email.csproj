@@ -7,6 +7,7 @@
     <RootNamespace>Microservice.Email</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>microservice-email-dev</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
