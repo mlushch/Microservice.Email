@@ -35,19 +35,19 @@ public sealed class EmailServiceTests : TestBase
     {
         return new EmailService(
             dbContext,
-            this.mockSmtpService.Object,
-            this.mockTemplateService.Object,
-            this.mockEmailValidator.Object,
-            this.mockTemplatedEmailValidator.Object,
-            this.mockLogger.Object);
+            mockSmtpService.Object,
+            mockTemplateService.Object,
+            mockEmailValidator.Object,
+            mockTemplatedEmailValidator.Object,
+            mockLogger.Object);
     }
 
     [Fact]
     public async Task SendAsync_WithValidRequest_ReturnsEmailResponseWithSentStatus()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendEmailRequest>
         {
@@ -60,11 +60,11 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -85,7 +85,7 @@ public sealed class EmailServiceTests : TestBase
         result.Recipients.Should().HaveCount(1);
         result.Recipients.First().Email.Should().Be("recipient@example.com");
 
-        this.mockSmtpService.Verify(
+        mockSmtpService.Verify(
             s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -101,8 +101,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendAsync_WithValidationFailure_ThrowsValidationException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendEmailRequest>
         {
@@ -115,7 +115,7 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Failure("Recipients", "Recipients are required"));
 
@@ -131,8 +131,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendAsync_WhenSmtpFails_ThrowsEmailSendException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendEmailRequest>
         {
@@ -145,11 +145,11 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -172,8 +172,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendAsync_WithMultipleRecipients_SendsToAllRecipients()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var recipients = new[] { "recipient1@example.com", "recipient2@example.com", "recipient3@example.com" };
         var request = new AttachmentsWrapper<SendEmailRequest>
@@ -187,11 +187,11 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -207,7 +207,7 @@ public sealed class EmailServiceTests : TestBase
 
         // Assert
         result.Recipients.Should().HaveCount(3);
-        this.mockSmtpService.Verify(
+        mockSmtpService.Verify(
             s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.Is<string[]>(r => r.Length == 3),
@@ -223,8 +223,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendAsync_WithAttachments_PassesAttachmentsToSmtpService()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var attachments = new[]
         {
@@ -243,11 +243,11 @@ public sealed class EmailServiceTests : TestBase
             Attachments = attachments
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -262,7 +262,7 @@ public sealed class EmailServiceTests : TestBase
         var result = await service.SendAsync(request);
 
         // Assert
-        this.mockSmtpService.Verify(
+        mockSmtpService.Verify(
             s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -278,8 +278,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendAsync_PersistsEmailToDatabase()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendEmailRequest>
         {
@@ -292,11 +292,11 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockEmailValidator
+        mockEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -322,8 +322,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendTemplatedAsync_WithValidRequest_RendersTemplateAndSends()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendTemplatedEmailRequest>
         {
@@ -340,18 +340,18 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockTemplatedEmailValidator
+        mockTemplatedEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendTemplatedEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockTemplateService
+        mockTemplateService
             .Setup(t => t.RenderAsync(
                 "welcome",
                 It.IsAny<Dictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("<html><body>Welcome John Doe!</body></html>");
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -369,11 +369,11 @@ public sealed class EmailServiceTests : TestBase
         result.Should().NotBeNull();
         result.EmailStatus.Should().Be(EmailStatus.Sent);
 
-        this.mockTemplateService.Verify(
+        mockTemplateService.Verify(
             t => t.RenderAsync("welcome", It.IsAny<Dictionary<string, object>>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
-        this.mockSmtpService.Verify(
+        mockSmtpService.Verify(
             s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -389,8 +389,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendTemplatedAsync_WithValidationFailure_ThrowsValidationException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendTemplatedEmailRequest>
         {
@@ -403,7 +403,7 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockTemplatedEmailValidator
+        mockTemplatedEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendTemplatedEmailRequest>()))
             .Returns(ValidationResult.Failure("TemplateName", "Template name is required"));
 
@@ -419,8 +419,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendTemplatedAsync_WhenTemplateNotFound_ThrowsException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendTemplatedEmailRequest>
         {
@@ -433,11 +433,11 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockTemplatedEmailValidator
+        mockTemplatedEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendTemplatedEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockTemplateService
+        mockTemplateService
             .Setup(t => t.RenderAsync(
                 "nonexistent",
                 It.IsAny<Dictionary<string, object>>(),
@@ -455,8 +455,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendTemplatedAsync_WhenSmtpFails_SetsEmailStatusToFailed()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendTemplatedEmailRequest>
         {
@@ -472,18 +472,18 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockTemplatedEmailValidator
+        mockTemplatedEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendTemplatedEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockTemplateService
+        mockTemplateService
             .Setup(t => t.RenderAsync(
                 "welcome",
                 It.IsAny<Dictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("<html><body>Welcome!</body></html>");
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -509,8 +509,8 @@ public sealed class EmailServiceTests : TestBase
     public async Task SendTemplatedAsync_UsesTemplateNameAsSubject_WhenNoSubjectProperty()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var request = new AttachmentsWrapper<SendTemplatedEmailRequest>
         {
@@ -526,18 +526,18 @@ public sealed class EmailServiceTests : TestBase
             }
         };
 
-        this.mockTemplatedEmailValidator
+        mockTemplatedEmailValidator
             .Setup(v => v.Validate(It.IsAny<SendTemplatedEmailRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockTemplateService
+        mockTemplateService
             .Setup(t => t.RenderAsync(
                 "welcome",
                 It.IsAny<Dictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("<html><body>Welcome!</body></html>");
 
-        this.mockSmtpService
+        mockSmtpService
             .Setup(s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),
@@ -552,7 +552,7 @@ public sealed class EmailServiceTests : TestBase
         var result = await service.SendTemplatedAsync(request);
 
         // Assert
-        this.mockSmtpService.Verify(
+        mockSmtpService.Verify(
             s => s.SendAsync(
                 It.IsAny<Sender>(),
                 It.IsAny<string[]>(),

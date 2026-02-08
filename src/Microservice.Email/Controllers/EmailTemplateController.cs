@@ -17,9 +17,6 @@ public sealed class EmailTemplateController : ControllerBase
     private readonly ITemplateService templateService;
     private readonly ILogger<EmailTemplateController> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmailTemplateController"/> class.
-    /// </summary>
     public EmailTemplateController(ITemplateService templateService, ILogger<EmailTemplateController> logger)
     {
         this.templateService = templateService;
@@ -36,13 +33,13 @@ public sealed class EmailTemplateController : ControllerBase
     [ProducesResponseType(typeof(IReadOnlyList<EmailTemplateResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<EmailTemplateResponse>>> GetAll(CancellationToken cancellationToken)
     {
-        this.logger.LogDebug("Retrieving all email templates");
+        logger.LogDebug("Retrieving all email templates");
 
-        var templates = await this.templateService.GetAllAsync(cancellationToken);
+        var templates = await templateService.GetAllAsync(cancellationToken);
 
-        this.logger.LogInformation("Retrieved {TemplateCount} email templates", templates.Count);
+        logger.LogInformation("Retrieved {TemplateCount} email templates", templates.Count);
 
-        return this.Ok(templates);
+        return Ok(templates);
     }
 
     /// <summary>
@@ -63,13 +60,13 @@ public sealed class EmailTemplateController : ControllerBase
         [FromForm] CreateEmailTemplateRequest request,
         CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("Creating email template with name {TemplateName}", request.Name);
+        logger.LogInformation("Creating email template with name {TemplateName}", request.Name);
 
-        await this.templateService.CreateAsync(request, cancellationToken);
+        await templateService.CreateAsync(request, cancellationToken);
 
-        this.logger.LogInformation("Email template {TemplateName} created successfully", request.Name);
+        logger.LogInformation("Email template {TemplateName} created successfully", request.Name);
 
-        return this.NoContent();
+        return NoContent();
     }
 
     /// <summary>
@@ -85,12 +82,12 @@ public sealed class EmailTemplateController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int templateId, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("Deleting email template with ID {TemplateId}", templateId);
+        logger.LogInformation("Deleting email template with ID {TemplateId}", templateId);
 
-        await this.templateService.DeleteAsync(templateId, cancellationToken);
+        await templateService.DeleteAsync(templateId, cancellationToken);
 
-        this.logger.LogInformation("Email template with ID {TemplateId} deleted successfully", templateId);
+        logger.LogInformation("Email template with ID {TemplateId} deleted successfully", templateId);
 
-        return this.NoContent();
+        return NoContent();
     }
 }

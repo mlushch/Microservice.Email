@@ -10,12 +10,12 @@ public sealed class ValidationResult
     /// <summary>
     /// Gets a value indicating whether the validation passed.
     /// </summary>
-    public bool IsValid => this.errors.Count == 0;
+    public bool IsValid => errors.Count == 0;
 
     /// <summary>
     /// Gets the collection of validation errors.
     /// </summary>
-    public IReadOnlyList<ValidationError> Errors => this.errors.AsReadOnly();
+    public IReadOnlyList<ValidationError> Errors => errors.AsReadOnly();
 
     /// <summary>
     /// Adds a validation error.
@@ -24,7 +24,7 @@ public sealed class ValidationResult
     /// <param name="errorMessage">The error message.</param>
     public void AddError(string propertyName, string errorMessage)
     {
-        this.errors.Add(new ValidationError(propertyName, errorMessage));
+        errors.Add(new ValidationError(propertyName, errorMessage));
     }
 
     /// <summary>

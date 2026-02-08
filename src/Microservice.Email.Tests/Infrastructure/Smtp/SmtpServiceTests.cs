@@ -44,72 +44,72 @@ public sealed class SmtpServiceTests
     private SmtpService CreateService(SmtpSettings? settings = null)
     {
         return new SmtpService(
-            this.mockFluentEmail.Object,
-            Options.Create(settings ?? this.smtpSettings),
-            this.mockLogger.Object);
+            mockFluentEmail.Object,
+            Options.Create(settings ?? smtpSettings),
+            mockLogger.Object);
     }
 
     [Fact]
     public async Task SendAsync_WithValidParameters_SendsEmailSuccessfully()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com", Name = "Test Sender" };
         var recipients = new[] { "recipient@example.com" };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body", false);
 
         // Assert
-        this.mockFluentEmail.Verify(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
-        this.mockFluentEmail.Verify(e => e.Subject(It.IsAny<string>()), Times.Once);
-        this.mockFluentEmail.Verify(e => e.To(It.IsAny<string>()), Times.Once);
+        mockFluentEmail.Verify(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        mockFluentEmail.Verify(e => e.Subject(It.IsAny<string>()), Times.Once);
+        mockFluentEmail.Verify(e => e.To(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
     public async Task SendAsync_WithHtmlBody_SendsHtmlEmail()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
         var htmlBody = "<html><body><h1>Hello</h1></body></html>";
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", htmlBody, true);
 
         // Assert
-        this.mockFluentEmail.Verify(e => e.Body(It.IsAny<string>(), true), Times.Once);
+        mockFluentEmail.Verify(e => e.Body(It.IsAny<string>(), true), Times.Once);
     }
 
     [Fact]
     public async Task SendAsync_WithMultipleRecipients_SendsToAllRecipients()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient1@example.com", "recipient2@example.com", "recipient3@example.com" };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body");
 
         // Assert
-        this.mockFluentEmail.Verify(e => e.To("recipient1@example.com"), Times.Once);
-        this.mockFluentEmail.Verify(e => e.To("recipient2@example.com"), Times.Once);
-        this.mockFluentEmail.Verify(e => e.To("recipient3@example.com"), Times.Once);
+        mockFluentEmail.Verify(e => e.To("recipient1@example.com"), Times.Once);
+        mockFluentEmail.Verify(e => e.To("recipient2@example.com"), Times.Once);
+        mockFluentEmail.Verify(e => e.To("recipient3@example.com"), Times.Once);
     }
 
     [Fact]
     public async Task SendAsync_WithAttachments_AddsAttachmentsToEmail()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
         var attachments = new[]
@@ -122,13 +122,13 @@ public sealed class SmtpServiceTests
             }
         };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body", false, attachments);
 
         // Assert
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.Attach(It.Is<Attachment>(a =>
                 a.Filename == "test.txt" &&
                 a.ContentType == "text/plain")),
@@ -139,17 +139,17 @@ public sealed class SmtpServiceTests
     public async Task SendAsync_WithNoSenderEmail_UsesDefaultSenderEmail()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com" }; // Explicit sender
         var recipients = new[] { "recipient@example.com" };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body");
 
         // Assert
-        this.mockFluentEmail.Verify(e => e.SetFrom("sender@example.com", It.IsAny<string>()), Times.Once);
+        mockFluentEmail.Verify(e => e.SetFrom("sender@example.com", It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -163,23 +163,23 @@ public sealed class SmtpServiceTests
             MaxRetryAttempts = 3,
             RetryDelayMilliseconds = 10 // Short delay for testing
         };
-        var service = this.CreateService(settings);
+        var service = CreateService(settings);
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
 
-        this.mockFluentEmail
+        mockFluentEmail
             .Setup(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Subject(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.To(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Body(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.SendAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SendResponse { ErrorMessages = new List<string> { "Connection refused" } });
 
@@ -191,7 +191,7 @@ public sealed class SmtpServiceTests
             .WithMessage("*Failed to send email after 3 attempts*");
 
         // Verify that SendAsync was called MaxRetryAttempts times
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.SendAsync(It.IsAny<CancellationToken>()),
             Times.Exactly(3));
     }
@@ -207,25 +207,25 @@ public sealed class SmtpServiceTests
             MaxRetryAttempts = 3,
             RetryDelayMilliseconds = 10
         };
-        var service = this.CreateService(settings);
+        var service = CreateService(settings);
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
 
-        this.mockFluentEmail
+        mockFluentEmail
             .Setup(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Subject(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.To(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Body(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(this.mockFluentEmail.Object);
+            .Returns(mockFluentEmail.Object);
 
         var callCount = 0;
-        this.mockFluentEmail
+        mockFluentEmail
             .Setup(e => e.SendAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(() =>
             {
@@ -241,7 +241,7 @@ public sealed class SmtpServiceTests
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body");
 
         // Assert - Should succeed on second attempt
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.SendAsync(It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
@@ -257,23 +257,23 @@ public sealed class SmtpServiceTests
             MaxRetryAttempts = 2,
             RetryDelayMilliseconds = 10
         };
-        var service = this.CreateService(settings);
+        var service = CreateService(settings);
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
 
-        this.mockFluentEmail
+        mockFluentEmail
             .Setup(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Subject(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.To(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Body(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.SendAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Network error"));
 
@@ -289,17 +289,17 @@ public sealed class SmtpServiceTests
     public async Task SendAsync_WithNullSenderName_UsesDefaultSenderName()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com", Name = null };
         var recipients = new[] { "recipient@example.com" };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body");
 
         // Assert - Uses DefaultSenderName from settings when sender.Name is null
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.SetFrom("sender@example.com", "Default Sender"),
             Times.Once);
     }
@@ -316,17 +316,17 @@ public sealed class SmtpServiceTests
             DefaultSenderName = null, // No default
             DefaultSenderEmail = "default@example.com"
         };
-        var service = this.CreateService(settings);
+        var service = CreateService(settings);
         var sender = new Sender { Email = "sender@example.com", Name = null };
         var recipients = new[] { "recipient@example.com" };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body");
 
         // Assert - Falls back to email address when no sender name and no default
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.SetFrom("sender@example.com", "sender@example.com"),
             Times.Once);
     }
@@ -335,7 +335,7 @@ public sealed class SmtpServiceTests
     public async Task SendAsync_WithAttachmentWithoutContentType_UsesOctetStream()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var sender = new Sender { Email = "sender@example.com" };
         var recipients = new[] { "recipient@example.com" };
         var attachments = new[]
@@ -348,13 +348,13 @@ public sealed class SmtpServiceTests
             }
         };
 
-        this.SetupSuccessfulEmailSend();
+        SetupSuccessfulEmailSend();
 
         // Act
         await service.SendAsync(sender, recipients, "Test Subject", "Test Body", false, attachments);
 
         // Assert
-        this.mockFluentEmail.Verify(
+        mockFluentEmail.Verify(
             e => e.Attach(It.Is<Attachment>(a =>
                 a.ContentType == "application/octet-stream")),
             Times.Once);
@@ -371,7 +371,7 @@ public sealed class SmtpServiceTests
             MaxRetryAttempts = 1,
             DefaultSenderEmail = null // No default
         };
-        var service = this.CreateService(settings);
+        var service = CreateService(settings);
         var sender = new Sender { Email = null! }; // No sender email
         var recipients = new[] { "recipient@example.com" };
 
@@ -385,22 +385,22 @@ public sealed class SmtpServiceTests
 
     private void SetupSuccessfulEmailSend()
     {
-        this.mockFluentEmail
+        mockFluentEmail
             .Setup(e => e.SetFrom(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Subject(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.To(It.IsAny<string>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Body(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.Attach(It.IsAny<Attachment>()))
-            .Returns(this.mockFluentEmail.Object);
-        this.mockFluentEmail
+            .Returns(mockFluentEmail.Object);
+        mockFluentEmail
             .Setup(e => e.SendAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SendResponse()); // Successful response
     }

@@ -20,9 +20,6 @@ public sealed class FileStorageService : IFileStorageService
     private readonly MinioSettings settings;
     private readonly ILogger<FileStorageService> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FileStorageService"/> class.
-    /// </summary>
     public FileStorageService(
         IMinioClient minioClient,
         IOptions<MinioSettings> settings,
@@ -38,7 +35,7 @@ public sealed class FileStorageService : IFileStorageService
     {
         try
         {
-            await this.EnsureBucketExistsAsync(bucketName, cancellationToken);
+            await EnsureBucketExistsAsync(bucketName, cancellationToken);
 
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
@@ -47,11 +44,11 @@ public sealed class FileStorageService : IFileStorageService
                 .WithObjectSize(stream.Length)
                 .WithContentType(contentType ?? "application/octet-stream");
 
-            await this.minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
+            await minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
             EmailMetrics.RecordStorageOperation("upload", true);
 
-            this.logger.LogInformation("Successfully uploaded file {FileName} to bucket {BucketName}", fileName, bucketName);
+            logger.LogInformation("Successfully uploaded file {FileName} to bucket {BucketName}", fileName, bucketName);
 
             return $"{bucketName}/{fileName}";
         }
@@ -59,7 +56,7 @@ public sealed class FileStorageService : IFileStorageService
         {
             EmailMetrics.RecordStorageOperation("upload", false);
 
-            this.logger.LogError(ex, "Failed to upload file {FileName} to bucket {BucketName}", fileName, bucketName);
+            logger.LogError(ex, "Failed to upload file {FileName} to bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to upload file '{fileName}' to bucket '{bucketName}'.", ex);
         }
     }
@@ -80,11 +77,11 @@ public sealed class FileStorageService : IFileStorageService
                     memoryStream.Position = 0;
                 });
 
-            await this.minioClient.GetObjectAsync(getObjectArgs, cancellationToken);
+            await minioClient.GetObjectAsync(getObjectArgs, cancellationToken);
 
             EmailMetrics.RecordStorageOperation("download", true);
 
-            this.logger.LogInformation("Successfully downloaded file {FileName} from bucket {BucketName}", fileName, bucketName);
+            logger.LogInformation("Successfully downloaded file {FileName} from bucket {BucketName}", fileName, bucketName);
 
             return memoryStream;
         }
@@ -92,7 +89,7 @@ public sealed class FileStorageService : IFileStorageService
         {
             EmailMetrics.RecordStorageOperation("download", false);
 
-            this.logger.LogError(ex, "Failed to download file {FileName} from bucket {BucketName}", fileName, bucketName);
+            logger.LogError(ex, "Failed to download file {FileName} from bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to download file '{fileName}' from bucket '{bucketName}'.", ex);
         }
     }
@@ -106,17 +103,17 @@ public sealed class FileStorageService : IFileStorageService
                 .WithBucket(bucketName)
                 .WithObject(fileName);
 
-            await this.minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
+            await minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
 
             EmailMetrics.RecordStorageOperation("delete", true);
 
-            this.logger.LogInformation("Successfully removed file {FileName} from bucket {BucketName}", fileName, bucketName);
+            logger.LogInformation("Successfully removed file {FileName} from bucket {BucketName}", fileName, bucketName);
         }
         catch (Exception ex)
         {
             EmailMetrics.RecordStorageOperation("delete", false);
 
-            this.logger.LogError(ex, "Failed to remove file {FileName} from bucket {BucketName}", fileName, bucketName);
+            logger.LogError(ex, "Failed to remove file {FileName} from bucket {BucketName}", fileName, bucketName);
             throw new FileStorageException($"Failed to remove file '{fileName}' from bucket '{bucketName}'.", ex);
         }
     }
@@ -127,18 +124,18 @@ public sealed class FileStorageService : IFileStorageService
         try
         {
             var bucketExistsArgs = new BucketExistsArgs().WithBucket(bucketName);
-            bool exists = await this.minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+            bool exists = await minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
 
             if (!exists)
             {
                 var makeBucketArgs = new MakeBucketArgs().WithBucket(bucketName);
-                await this.minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
-                this.logger.LogInformation("Created bucket {BucketName}", bucketName);
+                await minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
+                logger.LogInformation("Created bucket {BucketName}", bucketName);
             }
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Failed to ensure bucket {BucketName} exists", bucketName);
+            logger.LogError(ex, "Failed to ensure bucket {BucketName} exists", bucketName);
             throw new FileStorageException($"Failed to ensure bucket '{bucketName}' exists.", ex);
         }
     }

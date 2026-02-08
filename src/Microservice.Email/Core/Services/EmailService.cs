@@ -26,9 +26,6 @@ public sealed class EmailService : IEmailService
     private readonly IValidator<SendTemplatedEmailRequest> templatedEmailValidator;
     private readonly ILogger<EmailService> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmailService"/> class.
-    /// </summary>
     public EmailService(
         EmailDbContext dbContext,
         ISmtpService smtpService,
@@ -51,7 +48,7 @@ public sealed class EmailService : IEmailService
         var stopwatch = Stopwatch.StartNew();
         const string templateName = "plain";
 
-        var validationResult = this.emailValidator.Validate(request.Email);
+        var validationResult = emailValidator.Validate(request.Email);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
@@ -72,15 +69,15 @@ public sealed class EmailService : IEmailService
             }).ToList()
         };
 
-        this.dbContext.Emails.Add(emailEntity);
-        await this.dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.Emails.Add(emailEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         try
         {
             emailEntity.EmailStatus = EmailStatus.Sending;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
-            await this.smtpService.SendAsync(
+            await smtpService.SendAsync(
                 request.Email.Sender,
                 request.Email.Recipients,
                 request.Email.Subject,
@@ -91,20 +88,20 @@ public sealed class EmailService : IEmailService
 
             emailEntity.EmailStatus = EmailStatus.Sent;
             emailEntity.SentDate = DateTimeOffset.UtcNow;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             stopwatch.Stop();
             EmailMetrics.RecordEmailSent(templateName, stopwatch.Elapsed);
 
-            this.logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", request.Email.Recipients));
+            logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", request.Email.Recipients));
         }
         catch (Exception ex)
         {
             EmailMetrics.RecordEmailFailed(templateName);
 
-            this.logger.LogError(ex, "Failed to send email to {Recipients}", string.Join(", ", request.Email.Recipients));
+            logger.LogError(ex, "Failed to send email to {Recipients}", string.Join(", ", request.Email.Recipients));
             emailEntity.EmailStatus = EmailStatus.Failed;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             throw new EmailSendException("Failed to send email.", ex);
         }
 
@@ -116,13 +113,13 @@ public sealed class EmailService : IEmailService
     {
         var stopwatch = Stopwatch.StartNew();
 
-        var validationResult = this.templatedEmailValidator.Validate(request.Email);
+        var validationResult = templatedEmailValidator.Validate(request.Email);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
 
-        var renderedBody = await this.templateService.RenderAsync(
+        var renderedBody = await templateService.RenderAsync(
             request.Email.TemplateName,
             request.Email.TemplateProperties,
             cancellationToken);
@@ -144,15 +141,15 @@ public sealed class EmailService : IEmailService
             }).ToList()
         };
 
-        this.dbContext.Emails.Add(emailEntity);
-        await this.dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.Emails.Add(emailEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         try
         {
             emailEntity.EmailStatus = EmailStatus.Sending;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
-            await this.smtpService.SendAsync(
+            await smtpService.SendAsync(
                 request.Email.Sender,
                 request.Email.Recipients,
                 emailEntity.Subject,
@@ -163,22 +160,22 @@ public sealed class EmailService : IEmailService
 
             emailEntity.EmailStatus = EmailStatus.Sent;
             emailEntity.SentDate = DateTimeOffset.UtcNow;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             stopwatch.Stop();
             EmailMetrics.RecordEmailSent(request.Email.TemplateName, stopwatch.Elapsed);
 
-            this.logger.LogInformation("Templated email sent successfully to {Recipients} using template {TemplateName}",
+            logger.LogInformation("Templated email sent successfully to {Recipients} using template {TemplateName}",
                 string.Join(", ", request.Email.Recipients), request.Email.TemplateName);
         }
         catch (Exception ex)
         {
             EmailMetrics.RecordEmailFailed(request.Email.TemplateName);
 
-            this.logger.LogError(ex, "Failed to send templated email to {Recipients} using template {TemplateName}",
+            logger.LogError(ex, "Failed to send templated email to {Recipients} using template {TemplateName}",
                 string.Join(", ", request.Email.Recipients), request.Email.TemplateName);
             emailEntity.EmailStatus = EmailStatus.Failed;
-            await this.dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             throw new EmailSendException("Failed to send templated email.", ex);
         }
 

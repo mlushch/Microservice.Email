@@ -16,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.12" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Minio" Version="6.0.4" />
     <PackageReference Include="Moq" Version="4.20.72" />

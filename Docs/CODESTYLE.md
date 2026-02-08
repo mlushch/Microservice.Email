@@ -13,11 +13,13 @@ This document outlines the coding standards and best practices for the Microserv
 ## 2. Naming Conventions
 
 ### 2.1 General Naming
+
 - **PascalCase:** Classes, Methods, Properties, Public Fields, Enums, Namespaces.
 - **camelCase:** Method arguments, Local variables.
-- **camelCase (no `_` prefix):** Private fields should use plain camelCase and typically be assigned via `this.` in constructors (e.g., `private readonly IEmailService emailService;` and `this.emailService = emailService;`).
+- **camelCase (no `_` prefix):** Private fields should use plain camelCase and typically be assigned via `this.` in constructors when assigning constructor parameters to fields (e.g., `private readonly IEmailService emailService;` and `this.emailService = emailService;`). When referencing instance fields or properties in methods, omit `this.` unless required for disambiguation or clarity (e.g., `await emailService.SendAsync(...)`).
 
 ### 2.2 Specific Naming
+
 - **Interfaces:** Prefix with `I` (e.g., `IEmailService`).
 - **Classes:** Use descriptive nouns. Suffix with their role (e.g., `EmailService`, `EmailController`, `EmailResponse`, `SendEmailRequest`).
 - **Entity Classes:** Suffix with `Entity` (e.g., `EmailEntity`).
@@ -36,20 +38,24 @@ This document outlines the coding standards and best practices for the Microserv
 ## 4. Project-Specific Patterns
 
 ### 4.1 Dependency Injection
+
 - Register services in the `Modules` layer.
 - Use constructor injection for all dependencies.
 - Use `Scrutor` or manual registration as defined in the `IModule` implementations.
 
 ### 4.2 Error Handling
+
 - Use global exception handling (interceptors for gRPC, middleware for REST).
 - Throw specific exceptions (e.g., `ValidationException`) when business rules are violated.
 - Avoid using `try-catch` blocks for flow control.
 
 ### 4.3 Persistence (EF Core)
+
 - Use `IEntityTypeConfiguration<T>` for entity configurations.
 - Follow snake_case naming for database tables and columns (via `EFCore.NamingConventions`).
 - Prefix table names if necessary (e.g., `TEmail`).
 
 ### 4.4 Documentation
-- Use XML documentation comments (`///`) for public APIs, complex methods, and interfaces.
+
+- Use XML documentation comments (`///`) for public APIs, complex methods, and interfaces. Trivial constructors used only for dependency injection, and trivial exception constructors, are exempt from this requirement.
 - Keep `CONTRACTS.md` and `TECHNICAL_DOCUMENTATION.md` updated with any API or architectural changes.
