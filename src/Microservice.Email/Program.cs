@@ -19,6 +19,13 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Add additional configuration sources
+    // JSON configuration is added by default
+    // Environment variables with "EMAIL_" prefix are mapped to configuration
+    builder.Configuration
+        .AddEnvironmentVariables("EMAIL_")
+        .AddUserSecrets<Program>(optional: true);
+
     // Configure Serilog from configuration
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -27,6 +34,9 @@ try
         .Enrich.WithMachineName()
         .Enrich.WithThreadId()
         .Enrich.WithProperty("Application", "Microservice.Email"));
+
+    // Add configuration with validation
+    builder.Services.AddApplicationConfiguration(builder.Configuration);
 
     // Add services using modules
     builder.Services.AddModules(builder.Configuration);
