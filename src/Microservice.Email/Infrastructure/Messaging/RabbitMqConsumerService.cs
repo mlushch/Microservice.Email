@@ -26,9 +26,6 @@ public sealed class RabbitMqConsumerService : BackgroundService
     private IChannel? emailChannel;
     private IChannel? templatedEmailChannel;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RabbitMqConsumerService"/> class.
-    /// </summary>
     public RabbitMqConsumerService(
         IServiceProvider serviceProvider,
         IOptions<RabbitMqSettings> settings,
@@ -42,24 +39,24 @@ public sealed class RabbitMqConsumerService : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        this.logger.LogInformation("RabbitMQ Consumer Service is starting...");
+        logger.LogInformation("RabbitMQ Consumer Service is starting...");
 
         try
         {
-            await this.InitializeConnectionAsync(stoppingToken);
-            await this.StartConsumersAsync(stoppingToken);
+            await InitializeConnectionAsync(stoppingToken);
+            await StartConsumersAsync(stoppingToken);
 
-            this.logger.LogInformation("RabbitMQ Consumer Service started successfully");
+            logger.LogInformation("RabbitMQ Consumer Service started successfully");
 
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
         catch (OperationCanceledException)
         {
-            this.logger.LogInformation("RabbitMQ Consumer Service is stopping...");
+            logger.LogInformation("RabbitMQ Consumer Service is stopping...");
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Error in RabbitMQ Consumer Service");
+            logger.LogError(ex, "Error in RabbitMQ Consumer Service");
             throw;
         }
     }
@@ -68,67 +65,67 @@ public sealed class RabbitMqConsumerService : BackgroundService
     {
         var factory = new ConnectionFactory
         {
-            HostName = this.settings.HostName,
-            Port = this.settings.Port,
-            UserName = this.settings.Username,
-            Password = this.settings.Password,
-            VirtualHost = this.settings.VirtualHost
+            HostName = settings.HostName,
+            Port = settings.Port,
+            UserName = settings.Username,
+            Password = settings.Password,
+            VirtualHost = settings.VirtualHost
         };
 
-        if (this.settings.UseSsl)
+        if (settings.UseSsl)
         {
             factory.Ssl.Enabled = true;
         }
-        this.connection = await factory.CreateConnectionAsync(cancellationToken);
+        connection = await factory.CreateConnectionAsync(cancellationToken);
 
-        this.emailChannel = await this.connection.CreateChannelAsync(cancellationToken: cancellationToken);
-        await this.emailChannel.QueueDeclareAsync(
-            queue: this.settings.EmailQueueName,
+        emailChannel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        await emailChannel.QueueDeclareAsync(
+            queue: settings.EmailQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null,
             cancellationToken: cancellationToken);
 
-        this.templatedEmailChannel = await this.connection.CreateChannelAsync(cancellationToken: cancellationToken);
-        await this.templatedEmailChannel.QueueDeclareAsync(
-            queue: this.settings.TemplatedEmailQueueName,
+        templatedEmailChannel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        await templatedEmailChannel.QueueDeclareAsync(
+            queue: settings.TemplatedEmailQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null,
             cancellationToken: cancellationToken);
 
-        this.logger.LogInformation(
+        logger.LogInformation(
             "Connected to RabbitMQ at {HostName}:{Port}",
-            this.settings.HostName,
-            this.settings.Port);
+            settings.HostName,
+            settings.Port);
     }
 
     private async Task StartConsumersAsync(CancellationToken cancellationToken)
     {
         // Consumer for plain emails
-        var emailConsumer = new AsyncEventingBasicConsumer(this.emailChannel!);
+        var emailConsumer = new AsyncEventingBasicConsumer(emailChannel!);
         emailConsumer.ReceivedAsync += async (_, ea) =>
         {
-            await this.HandleEmailMessageAsync(ea, cancellationToken);
+            await HandleEmailMessageAsync(ea, cancellationToken);
         };
 
-        await this.emailChannel!.BasicConsumeAsync(
-            queue: this.settings.EmailQueueName,
+        await emailChannel!.BasicConsumeAsync(
+            queue: settings.EmailQueueName,
             autoAck: false,
             consumer: emailConsumer,
             cancellationToken: cancellationToken);
 
         // Consumer for templated emails
-        var templatedEmailConsumer = new AsyncEventingBasicConsumer(this.templatedEmailChannel!);
+        var templatedEmailConsumer = new AsyncEventingBasicConsumer(templatedEmailChannel!);
         templatedEmailConsumer.ReceivedAsync += async (_, ea) =>
         {
-            await this.HandleTemplatedEmailMessageAsync(ea, cancellationToken);
+            await HandleTemplatedEmailMessageAsync(ea, cancellationToken);
         };
 
-        await this.templatedEmailChannel!.BasicConsumeAsync(
-            queue: this.settings.TemplatedEmailQueueName,
+        await templatedEmailChannel!.BasicConsumeAsync(
+            queue: settings.TemplatedEmailQueueName,
             autoAck: false,
             consumer: templatedEmailConsumer,
             cancellationToken: cancellationToken);
@@ -143,21 +140,21 @@ public sealed class RabbitMqConsumerService : BackgroundService
 
             if (message is null)
             {
-                this.logger.LogWarning("Received null or invalid email message");
-                await this.emailChannel!.BasicNackAsync(ea.DeliveryTag, false, false, cancellationToken);
+                logger.LogWarning("Received null or invalid email message");
+                await emailChannel!.BasicNackAsync(ea.DeliveryTag, false, false, cancellationToken);
                 return;
             }
 
-            using var scope = this.serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var handler = scope.ServiceProvider.GetRequiredService<IMessageHandler<AttachmentsWrapper<SendEmailRequest>>>();
 
             await handler.HandleAsync(message, cancellationToken);
-            await this.emailChannel!.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
+            await emailChannel!.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Error processing email message");
-            await this.emailChannel!.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
+            logger.LogError(ex, "Error processing email message");
+            await emailChannel!.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
         }
     }
 
@@ -170,42 +167,42 @@ public sealed class RabbitMqConsumerService : BackgroundService
 
             if (message is null)
             {
-                this.logger.LogWarning("Received null or invalid templated email message");
-                await this.templatedEmailChannel!.BasicNackAsync(ea.DeliveryTag, false, false, cancellationToken);
+                logger.LogWarning("Received null or invalid templated email message");
+                await templatedEmailChannel!.BasicNackAsync(ea.DeliveryTag, false, false, cancellationToken);
                 return;
             }
 
-            using var scope = this.serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var handler = scope.ServiceProvider.GetRequiredService<IMessageHandler<AttachmentsWrapper<SendTemplatedEmailRequest>>>();
 
             await handler.HandleAsync(message, cancellationToken);
-            await this.templatedEmailChannel!.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
+            await templatedEmailChannel!.BasicAckAsync(ea.DeliveryTag, false, cancellationToken);
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Error processing templated email message");
-            await this.templatedEmailChannel!.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
+            logger.LogError(ex, "Error processing templated email message");
+            await templatedEmailChannel!.BasicNackAsync(ea.DeliveryTag, false, true, cancellationToken);
         }
     }
 
     /// <inheritdoc />
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("RabbitMQ Consumer Service is stopping...");
+        logger.LogInformation("RabbitMQ Consumer Service is stopping...");
 
-        if (this.emailChannel is not null)
+        if (emailChannel is not null)
         {
-            await this.emailChannel.CloseAsync(cancellationToken);
+            await emailChannel.CloseAsync(cancellationToken);
         }
 
-        if (this.templatedEmailChannel is not null)
+        if (templatedEmailChannel is not null)
         {
-            await this.templatedEmailChannel.CloseAsync(cancellationToken);
+            await templatedEmailChannel.CloseAsync(cancellationToken);
         }
 
-        if (this.connection is not null)
+        if (connection is not null)
         {
-            await this.connection.CloseAsync(cancellationToken);
+            await connection.CloseAsync(cancellationToken);
         }
 
         await base.StopAsync(cancellationToken);
@@ -214,9 +211,9 @@ public sealed class RabbitMqConsumerService : BackgroundService
     /// <inheritdoc />
     public override void Dispose()
     {
-        this.emailChannel?.Dispose();
-        this.templatedEmailChannel?.Dispose();
-        this.connection?.Dispose();
+        emailChannel?.Dispose();
+        templatedEmailChannel?.Dispose();
+        connection?.Dispose();
         base.Dispose();
     }
 }

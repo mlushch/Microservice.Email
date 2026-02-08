@@ -30,9 +30,6 @@ public sealed class TemplateService : ITemplateService
 
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TemplateService"/> class.
-    /// </summary>
     public TemplateService(
         EmailDbContext dbContext,
         IFileStorageService fileStorageService,
@@ -54,7 +51,7 @@ public sealed class TemplateService : ITemplateService
     {
         EmailMetrics.RecordTemplateOperation("get_all");
 
-        var templates = await this.dbContext.EmailTemplates
+        var templates = await dbContext.EmailTemplates
             .AsNoTracking()
             .OrderBy(t => t.Name)
             .Select(t => new EmailTemplateResponse
@@ -72,13 +69,13 @@ public sealed class TemplateService : ITemplateService
     /// <inheritdoc />
     public async Task CreateAsync(CreateEmailTemplateRequest request, CancellationToken cancellationToken = default)
     {
-        var validationResult = this.validator.Validate(request);
+        var validationResult = validator.Validate(request);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
 
-        var existingTemplate = await this.dbContext.EmailTemplates
+        var existingTemplate = await dbContext.EmailTemplates
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Name == request.Name, cancellationToken);
 
@@ -98,32 +95,32 @@ public sealed class TemplateService : ITemplateService
         stream.Position = 0;
 
         var fileName = $"{request.Name}{Path.GetExtension(request.File.FileName)}";
-        await this.fileStorageService.UploadAsync(
+        await fileStorageService.UploadAsync(
             stream,
             fileName,
-            this.minioSettings.TemplatesBucket,
+            minioSettings.TemplatesBucket,
             "text/html",
             cancellationToken);
 
         var templateEntity = new EmailTemplateEntity
         {
             Name = request.Name,
-            Path = $"{this.minioSettings.TemplatesBucket}/{fileName}",
+            Path = $"{minioSettings.TemplatesBucket}/{fileName}",
             Size = (int)request.File.Length
         };
 
-        this.dbContext.EmailTemplates.Add(templateEntity);
-        await this.dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.EmailTemplates.Add(templateEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         EmailMetrics.RecordTemplateOperation("create");
 
-        this.logger.LogInformation("Created email template {TemplateName}", request.Name);
+        logger.LogInformation("Created email template {TemplateName}", request.Name);
     }
 
     /// <inheritdoc />
     public async Task DeleteAsync(int templateId, CancellationToken cancellationToken = default)
     {
-        var template = await this.dbContext.EmailTemplates
+        var template = await dbContext.EmailTemplates
             .FirstOrDefaultAsync(t => t.Id == templateId, cancellationToken);
 
         if (template is null)
@@ -132,20 +129,20 @@ public sealed class TemplateService : ITemplateService
         }
 
         var fileName = Path.GetFileName(template.Path);
-        await this.fileStorageService.RemoveAsync(
+        await fileStorageService.RemoveAsync(
             fileName,
-            this.minioSettings.TemplatesBucket,
+            minioSettings.TemplatesBucket,
             cancellationToken);
 
-        this.dbContext.EmailTemplates.Remove(template);
-        await this.dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.EmailTemplates.Remove(template);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // Invalidate cache
-        this.cache.Remove(GetCacheKey(template.Name));
+        cache.Remove(GetCacheKey(template.Name));
 
         EmailMetrics.RecordTemplateOperation("delete");
 
-        this.logger.LogInformation("Deleted email template {TemplateName}", template.Name);
+        logger.LogInformation("Deleted email template {TemplateName}", template.Name);
     }
 
     /// <inheritdoc />
@@ -153,9 +150,9 @@ public sealed class TemplateService : ITemplateService
     {
         var cacheKey = GetCacheKey(templateName);
 
-        if (!this.cache.TryGetValue(cacheKey, out Template? template))
+        if (!cache.TryGetValue(cacheKey, out Template? template))
         {
-            var templateEntity = await this.dbContext.EmailTemplates
+            var templateEntity = await dbContext.EmailTemplates
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.Name == templateName, cancellationToken);
 
@@ -165,9 +162,9 @@ public sealed class TemplateService : ITemplateService
             }
 
             var fileName = Path.GetFileName(templateEntity.Path);
-            using var stream = await this.fileStorageService.DownloadAsync(
+            using var stream = await fileStorageService.DownloadAsync(
                 fileName,
-                this.minioSettings.TemplatesBucket,
+                minioSettings.TemplatesBucket,
                 cancellationToken);
 
             using var reader = new StreamReader(stream);
@@ -181,19 +178,19 @@ public sealed class TemplateService : ITemplateService
                 throw new ValidationException("TemplateContent", $"Template '{templateName}' has syntax errors: {errors}");
             }
 
-            this.cache.Set(cacheKey, template, CacheDuration);
-            this.logger.LogDebug("Cached template {TemplateName}", templateName);
+            cache.Set(cacheKey, template, CacheDuration);
+            logger.LogDebug("Cached template {TemplateName}", templateName);
         }
 
         try
         {
             var result = await template!.RenderAsync(properties);
-            this.logger.LogDebug("Rendered template {TemplateName}", templateName);
+            logger.LogDebug("Rendered template {TemplateName}", templateName);
             return result;
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Failed to render template {TemplateName}", templateName);
+            logger.LogError(ex, "Failed to render template {TemplateName}", templateName);
             throw new ValidationException("TemplateContent", $"Failed to render template '{templateName}': {ex.Message}");
         }
     }

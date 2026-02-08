@@ -39,24 +39,24 @@ public sealed class FileStorageServiceTests
     private FileStorageService CreateService()
     {
         return new FileStorageService(
-            this.mockMinioClient.Object,
-            this.minioOptions,
-            this.mockLogger.Object);
+            mockMinioClient.Object,
+            minioOptions,
+            mockLogger.Object);
     }
 
     [Fact]
     public async Task UploadAsync_WithValidStream_UploadsAndReturnsPath()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var fileContent = "Test content"u8.ToArray();
         using var stream = new MemoryStream(fileContent);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse(HttpStatusCode.OK, "etag", new Dictionary<string, string>(), 0, ""));
 
@@ -66,7 +66,7 @@ public sealed class FileStorageServiceTests
         // Assert
         result.Should().Be("test-bucket/test.txt");
 
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -75,19 +75,19 @@ public sealed class FileStorageServiceTests
     public async Task UploadAsync_WhenBucketDoesNotExist_CreatesBucketAndUploads()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var fileContent = "Test content"u8.ToArray();
         using var stream = new MemoryStream(fileContent);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.MakeBucketAsync(It.IsAny<MakeBucketArgs>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse(HttpStatusCode.OK, "etag", new Dictionary<string, string>(), 0, ""));
 
@@ -97,7 +97,7 @@ public sealed class FileStorageServiceTests
         // Assert
         result.Should().Be("new-bucket/test.txt");
 
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.MakeBucketAsync(It.IsAny<MakeBucketArgs>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -106,15 +106,15 @@ public sealed class FileStorageServiceTests
     public async Task UploadAsync_WhenMinioFails_ThrowsFileStorageException()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var fileContent = "Test content"u8.ToArray();
         using var stream = new MemoryStream(fileContent);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("MinIO connection failed"));
 
@@ -130,15 +130,15 @@ public sealed class FileStorageServiceTests
     public async Task UploadAsync_WithoutContentType_UsesOctetStream()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
         var fileContent = "Test content"u8.ToArray();
         using var stream = new MemoryStream(fileContent);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse(HttpStatusCode.OK, "etag", new Dictionary<string, string>(), 0, ""));
 
@@ -153,9 +153,9 @@ public sealed class FileStorageServiceTests
     public async Task DownloadAsync_WithExistingFile_ReturnsStream()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.GetObjectAsync(It.IsAny<GetObjectArgs>(), It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(default(Minio.DataModel.ObjectStat)!));
 
@@ -164,7 +164,7 @@ public sealed class FileStorageServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.GetObjectAsync(It.IsAny<GetObjectArgs>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -173,9 +173,9 @@ public sealed class FileStorageServiceTests
     public async Task DownloadAsync_WhenFileMissing_ThrowsFileStorageException()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.GetObjectAsync(It.IsAny<GetObjectArgs>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Object not found"));
 
@@ -191,9 +191,9 @@ public sealed class FileStorageServiceTests
     public async Task RemoveAsync_WithExistingFile_RemovesFile()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.RemoveObjectAsync(It.IsAny<RemoveObjectArgs>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -201,7 +201,7 @@ public sealed class FileStorageServiceTests
         await service.RemoveAsync("test.txt", "test-bucket");
 
         // Assert
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.RemoveObjectAsync(It.IsAny<RemoveObjectArgs>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -210,9 +210,9 @@ public sealed class FileStorageServiceTests
     public async Task RemoveAsync_WhenMinioFails_ThrowsFileStorageException()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.RemoveObjectAsync(It.IsAny<RemoveObjectArgs>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("MinIO error"));
 
@@ -228,9 +228,9 @@ public sealed class FileStorageServiceTests
     public async Task EnsureBucketExistsAsync_WhenBucketExists_DoesNotCreateBucket()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -238,7 +238,7 @@ public sealed class FileStorageServiceTests
         await service.EnsureBucketExistsAsync("existing-bucket");
 
         // Assert
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.MakeBucketAsync(It.IsAny<MakeBucketArgs>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -247,13 +247,13 @@ public sealed class FileStorageServiceTests
     public async Task EnsureBucketExistsAsync_WhenBucketDoesNotExist_CreatesBucket()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.MakeBucketAsync(It.IsAny<MakeBucketArgs>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -261,7 +261,7 @@ public sealed class FileStorageServiceTests
         await service.EnsureBucketExistsAsync("new-bucket");
 
         // Assert
-        this.mockMinioClient.Verify(
+        mockMinioClient.Verify(
             c => c.MakeBucketAsync(It.IsAny<MakeBucketArgs>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -270,9 +270,9 @@ public sealed class FileStorageServiceTests
     public async Task EnsureBucketExistsAsync_WhenMinioFails_ThrowsFileStorageException()
     {
         // Arrange
-        var service = this.CreateService();
+        var service = CreateService();
 
-        this.mockMinioClient
+        mockMinioClient
             .Setup(c => c.BucketExistsAsync(It.IsAny<BucketExistsArgs>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("MinIO connection error"));
 

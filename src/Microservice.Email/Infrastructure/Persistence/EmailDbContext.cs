@@ -9,10 +9,6 @@ namespace Microservice.Email.Infrastructure.Persistence;
 /// </summary>
 public sealed class EmailDbContext : DbContext
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmailDbContext"/> class.
-    /// </summary>
-    /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
     public EmailDbContext(DbContextOptions<EmailDbContext> options) : base(options)
     {
     }

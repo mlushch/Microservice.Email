@@ -10,9 +10,6 @@ public sealed class CorrelationIdMiddleware
     private const string CorrelationIdHeader = "X-Correlation-ID";
     private readonly RequestDelegate next;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CorrelationIdMiddleware"/> class.
-    /// </summary>
     public CorrelationIdMiddleware(RequestDelegate next)
     {
         this.next = next;
@@ -36,7 +33,7 @@ public sealed class CorrelationIdMiddleware
         using (LogContext.PushProperty("CorrelationId", correlationId))
         using (LogContext.PushProperty("RequestId", context.TraceIdentifier))
         {
-            await this.next(context);
+            await next(context);
         }
     }
 

@@ -14,9 +14,6 @@ public sealed class GlobalExceptionMiddleware
     private readonly RequestDelegate next;
     private readonly ILogger<GlobalExceptionMiddleware> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="GlobalExceptionMiddleware"/> class.
-    /// </summary>
     public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
     {
         this.next = next;
@@ -30,11 +27,11 @@ public sealed class GlobalExceptionMiddleware
     {
         try
         {
-            await this.next(context);
+            await next(context);
         }
         catch (Exception ex)
         {
-            await this.HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, ex);
         }
     }
 
@@ -101,11 +98,11 @@ public sealed class GlobalExceptionMiddleware
 
         if (statusCode == HttpStatusCode.InternalServerError)
         {
-            this.logger.LogError(exception, "Unhandled exception occurred");
+            logger.LogError(exception, "Unhandled exception occurred");
         }
         else
         {
-            this.logger.LogWarning(exception, "Handled exception occurred: {ExceptionType}", exception.GetType().Name);
+            logger.LogWarning(exception, "Handled exception occurred: {ExceptionType}", exception.GetType().Name);
         }
 
         context.Response.ContentType = "application/json";

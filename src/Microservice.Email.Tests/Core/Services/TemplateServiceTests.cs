@@ -45,19 +45,19 @@ public sealed class TemplateServiceTests : TestBase
     {
         return new TemplateService(
             dbContext,
-            this.mockFileStorageService.Object,
-            this.mockValidator.Object,
-            this.memoryCache,
-            this.minioOptions,
-            this.mockLogger.Object);
+            mockFileStorageService.Object,
+            mockValidator.Object,
+            memoryCache,
+            minioOptions,
+            mockLogger.Object);
     }
 
     [Fact]
     public async Task GetAllAsync_ReturnsAllTemplates()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.AddRange(
             new EmailTemplateEntity { Name = "welcome", Path = "templates/welcome.html", Size = 1024 },
@@ -79,8 +79,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task GetAllAsync_WhenNoTemplates_ReturnsEmptyList()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         // Act
         var result = await service.GetAllAsync();
@@ -93,8 +93,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task GetAllAsync_ReturnsTemplatesOrderedByName()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.AddRange(
             new EmailTemplateEntity { Name = "zebra", Path = "templates/zebra.html", Size = 100 },
@@ -116,8 +116,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task CreateAsync_WithValidRequest_CreatesTemplateAndUploadsFile()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var templateContent = "<html><body>Hello {{ name }}!</body></html>";
         var mockFile = CreateMockFormFile("template.html", templateContent);
@@ -129,11 +129,11 @@ public sealed class TemplateServiceTests : TestBase
             File = mockFile.Object
         };
 
-        this.mockValidator
+        mockValidator
             .Setup(v => v.Validate(It.IsAny<CreateEmailTemplateRequest>()))
             .Returns(ValidationResult.Success());
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.UploadAsync(
                 It.IsAny<Stream>(),
                 It.IsAny<string>(),
@@ -150,7 +150,7 @@ public sealed class TemplateServiceTests : TestBase
         savedTemplate.Should().NotBeNull();
         savedTemplate!.Name.Should().Be("greeting");
 
-        this.mockFileStorageService.Verify(
+        mockFileStorageService.Verify(
             s => s.UploadAsync(
                 It.IsAny<Stream>(),
                 "greeting.html",
@@ -164,8 +164,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task CreateAsync_WithValidationFailure_ThrowsValidationException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var mockFile = CreateMockFormFile("template.html", "content");
         var request = new CreateEmailTemplateRequest
@@ -175,7 +175,7 @@ public sealed class TemplateServiceTests : TestBase
             File = mockFile.Object
         };
 
-        this.mockValidator
+        mockValidator
             .Setup(v => v.Validate(It.IsAny<CreateEmailTemplateRequest>()))
             .Returns(ValidationResult.Failure("Name", "Name is required"));
 
@@ -191,8 +191,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task CreateAsync_WithDuplicateName_ThrowsValidationException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.Add(new EmailTemplateEntity
         {
@@ -210,7 +210,7 @@ public sealed class TemplateServiceTests : TestBase
             File = mockFile.Object
         };
 
-        this.mockValidator
+        mockValidator
             .Setup(v => v.Validate(It.IsAny<CreateEmailTemplateRequest>()))
             .Returns(ValidationResult.Success());
 
@@ -226,8 +226,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task CreateAsync_WithInvalidScriban_ThrowsValidationException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var invalidTemplateContent = "<html><body>Hello {{ name </body></html>"; // Invalid Scriban syntax
         var mockFile = CreateMockFormFile("template.html", invalidTemplateContent);
@@ -239,7 +239,7 @@ public sealed class TemplateServiceTests : TestBase
             File = mockFile.Object
         };
 
-        this.mockValidator
+        mockValidator
             .Setup(v => v.Validate(It.IsAny<CreateEmailTemplateRequest>()))
             .Returns(ValidationResult.Success());
 
@@ -255,8 +255,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task DeleteAsync_WithExistingTemplate_DeletesTemplateAndFile()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var template = new EmailTemplateEntity
         {
@@ -267,7 +267,7 @@ public sealed class TemplateServiceTests : TestBase
         dbContext.EmailTemplates.Add(template);
         await dbContext.SaveChangesAsync();
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.RemoveAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -281,7 +281,7 @@ public sealed class TemplateServiceTests : TestBase
         var deletedTemplate = dbContext.EmailTemplates.FirstOrDefault(t => t.Id == template.Id);
         deletedTemplate.Should().BeNull();
 
-        this.mockFileStorageService.Verify(
+        mockFileStorageService.Verify(
             s => s.RemoveAsync("to-delete.html", "templates", It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -290,8 +290,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task DeleteAsync_WithNonExistingTemplate_ThrowsTemplateNotFoundException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         // Act
         var act = async () => await service.DeleteAsync(999);
@@ -304,8 +304,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task RenderAsync_WithExistingTemplate_ReturnsRenderedHtml()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.Add(new EmailTemplateEntity
         {
@@ -318,7 +318,7 @@ public sealed class TemplateServiceTests : TestBase
         var templateContent = "<html><body>Hello {{ name }}, welcome to {{ company }}!</body></html>";
         var templateStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(templateContent));
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.DownloadAsync(
                 "welcome.html",
                 "templates",
@@ -343,8 +343,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task RenderAsync_WithNonExistingTemplate_ThrowsTemplateNotFoundException()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var properties = new Dictionary<string, object>();
 
@@ -360,8 +360,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task RenderAsync_CachesTemplate_OnSecondCall()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.Add(new EmailTemplateEntity
         {
@@ -374,7 +374,7 @@ public sealed class TemplateServiceTests : TestBase
         var templateContent = "<html><body>Hello {{ name }}!</body></html>";
 
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.DownloadAsync(
                 "cached.html",
                 "templates",
@@ -392,7 +392,7 @@ public sealed class TemplateServiceTests : TestBase
         result2.Should().Contain("Hello John");
 
         // File storage should only be called once due to caching
-        this.mockFileStorageService.Verify(
+        mockFileStorageService.Verify(
             s => s.DownloadAsync("cached.html", "templates", It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -401,8 +401,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task RenderAsync_WithEmptyProperties_RendersTemplateWithDefaults()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         dbContext.EmailTemplates.Add(new EmailTemplateEntity
         {
@@ -415,7 +415,7 @@ public sealed class TemplateServiceTests : TestBase
         var templateContent = "<html><body>Hello {{ name ?? 'Guest' }}!</body></html>";
         var templateStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(templateContent));
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.DownloadAsync(
                 "simple.html",
                 "templates",
@@ -433,8 +433,8 @@ public sealed class TemplateServiceTests : TestBase
     public async Task DeleteAsync_InvalidatesCachedTemplate()
     {
         // Arrange
-        using var dbContext = this.CreateInMemoryDbContext();
-        var service = this.CreateService(dbContext);
+        using var dbContext = CreateInMemoryDbContext();
+        var service = CreateService(dbContext);
 
         var template = new EmailTemplateEntity
         {
@@ -449,14 +449,14 @@ public sealed class TemplateServiceTests : TestBase
         var templateContent = "<html><body>Hello {{ name }}!</body></html>";
         var templateStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(templateContent));
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.DownloadAsync(
                 "to-invalidate.html",
                 "templates",
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(templateContent)));
 
-        this.mockFileStorageService
+        mockFileStorageService
             .Setup(s => s.RemoveAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),

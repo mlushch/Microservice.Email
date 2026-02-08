@@ -15,9 +15,6 @@ public sealed class SendTemplatedEmailMessageHandler : IMessageHandler<Attachmen
     private readonly IEmailService emailService;
     private readonly ILogger<SendTemplatedEmailMessageHandler> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SendTemplatedEmailMessageHandler"/> class.
-    /// </summary>
     public SendTemplatedEmailMessageHandler(
         IEmailService emailService,
         ILogger<SendTemplatedEmailMessageHandler> logger)
@@ -32,23 +29,23 @@ public sealed class SendTemplatedEmailMessageHandler : IMessageHandler<Attachmen
         // Push correlation ID from message to log context
         using (LogContext.PushProperty("CorrelationId", message.CorrelationId))
         {
-            this.logger.LogInformation(
+            logger.LogInformation(
                 "Processing templated email message with CorrelationId: {CorrelationId}, TemplateName: {TemplateName}",
                 message.CorrelationId,
                 message.Payload.Email.TemplateName);
 
             try
             {
-                var response = await this.emailService.SendTemplatedAsync(message.Payload, cancellationToken);
+                var response = await emailService.SendTemplatedAsync(message.Payload, cancellationToken);
 
-                this.logger.LogInformation(
+                logger.LogInformation(
                     "Successfully processed templated email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
                     message.CorrelationId,
                     response.Id);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(
+                logger.LogError(
                     ex,
                     "Failed to process templated email message with CorrelationId: {CorrelationId}",
                     message.CorrelationId);

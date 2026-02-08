@@ -10,10 +10,7 @@ public sealed class TemplateNotFoundException : Exception
     /// </summary>
     public string TemplateName { get; }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TemplateNotFoundException"/> class.
-    /// </summary>
-    /// <param name="templateName">The name of the template that was not found.</param>
+
     public TemplateNotFoundException(string templateName)
         : base($"Email template '{templateName}' was not found.")
     {

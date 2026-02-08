@@ -22,9 +22,6 @@ public sealed class SmtpService : ISmtpService
     private readonly SmtpSettings settings;
     private readonly ILogger<SmtpService> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SmtpService"/> class.
-    /// </summary>
     public SmtpService(
         IFluentEmail fluentEmail,
         IOptions<SmtpSettings> settings,
@@ -45,19 +42,19 @@ public sealed class SmtpService : ISmtpService
         DomainAttachment[]? attachments = null,
         CancellationToken cancellationToken = default)
     {
-        var senderEmail = sender.Email ?? this.settings.DefaultSenderEmail
+        var senderEmail = sender.Email ?? settings.DefaultSenderEmail
             ?? throw new EmailSendException("Sender email is required.");
-        var senderName = sender.Name ?? this.settings.DefaultSenderName ?? senderEmail;
+        var senderName = sender.Name ?? settings.DefaultSenderName ?? senderEmail;
 
         int attempts = 0;
         Exception? lastException = null;
 
-        while (attempts < this.settings.MaxRetryAttempts)
+        while (attempts < settings.MaxRetryAttempts)
         {
             attempts++;
             try
             {
-                var email = this.fluentEmail
+                var email = fluentEmail
                     .SetFrom(senderEmail, senderName)
                     .Subject(subject);
 
@@ -94,7 +91,7 @@ public sealed class SmtpService : ISmtpService
 
                 if (response.Successful)
                 {
-                    this.logger.LogInformation(
+                    logger.LogInformation(
                         "Email sent successfully to {Recipients} on attempt {Attempt}",
                         string.Join(", ", recipients),
                         attempts);
@@ -104,7 +101,7 @@ public sealed class SmtpService : ISmtpService
                 lastException = new EmailSendException(
                     $"Failed to send email: {string.Join(", ", response.ErrorMessages)}");
 
-                this.logger.LogWarning(
+                logger.LogWarning(
                     "Email sending failed on attempt {Attempt}: {Errors}",
                     attempts,
                     string.Join(", ", response.ErrorMessages));
@@ -112,26 +109,26 @@ public sealed class SmtpService : ISmtpService
             catch (Exception ex)
             {
                 lastException = ex;
-                this.logger.LogWarning(
+                logger.LogWarning(
                     ex,
                     "Email sending failed on attempt {Attempt}",
                     attempts);
             }
 
-            if (attempts < this.settings.MaxRetryAttempts)
+            if (attempts < settings.MaxRetryAttempts)
             {
-                await Task.Delay(this.settings.RetryDelayMilliseconds, cancellationToken);
+                await Task.Delay(settings.RetryDelayMilliseconds, cancellationToken);
             }
         }
 
-        this.logger.LogError(
+        logger.LogError(
             lastException,
             "Email sending failed after {MaxAttempts} attempts to {Recipients}",
-            this.settings.MaxRetryAttempts,
+            settings.MaxRetryAttempts,
             string.Join(", ", recipients));
 
         throw new EmailSendException(
-            $"Failed to send email after {this.settings.MaxRetryAttempts} attempts.",
+            $"Failed to send email after {settings.MaxRetryAttempts} attempts.",
             lastException ?? new Exception("Unknown error"));
     }
 }

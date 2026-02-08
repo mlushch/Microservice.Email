@@ -15,9 +15,6 @@ public sealed class SendEmailMessageHandler : IMessageHandler<AttachmentsWrapper
     private readonly IEmailService emailService;
     private readonly ILogger<SendEmailMessageHandler> logger;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SendEmailMessageHandler"/> class.
-    /// </summary>
     public SendEmailMessageHandler(
         IEmailService emailService,
         ILogger<SendEmailMessageHandler> logger)
@@ -32,22 +29,22 @@ public sealed class SendEmailMessageHandler : IMessageHandler<AttachmentsWrapper
         // Push correlation ID from message to log context
         using (LogContext.PushProperty("CorrelationId", message.CorrelationId))
         {
-            this.logger.LogInformation(
+            logger.LogInformation(
                 "Processing email message with CorrelationId: {CorrelationId}",
                 message.CorrelationId);
 
             try
             {
-                var response = await this.emailService.SendAsync(message.Payload, cancellationToken);
+                var response = await emailService.SendAsync(message.Payload, cancellationToken);
 
-                this.logger.LogInformation(
+                logger.LogInformation(
                     "Successfully processed email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
                     message.CorrelationId,
                     response.Id);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(
+                logger.LogError(
                     ex,
                     "Failed to process email message with CorrelationId: {CorrelationId}",
                     message.CorrelationId);
