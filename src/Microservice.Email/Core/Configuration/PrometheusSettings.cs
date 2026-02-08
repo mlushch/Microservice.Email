@@ -27,7 +27,7 @@ public sealed class PrometheusSettings
     /// Gets or sets the allowed hosts for the metrics endpoint.
     /// Use "*" to allow all hosts.
     /// </summary>
-    public string[] AllowedHosts { get; init; } = ["localhost", "127.0.0.1", "[::1]"];
+    public string[] AllowedHosts { get; init; } = ["localhost", "127.0.0.1"];
 
     /// <summary>
     /// Gets or sets a value indicating whether to include HTTP request metrics.

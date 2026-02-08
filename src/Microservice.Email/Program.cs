@@ -1,5 +1,8 @@
 using Microservice.Email.Extensions;
+using Microservice.Email.Infrastructure.Persistence;
 using Microservice.Email.Modules;
+
+using Microsoft.EntityFrameworkCore;
 
 using Prometheus;
 
@@ -42,6 +45,18 @@ try
 // Add health checks
 builder.Services.AddHealthChecks();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Add controllers
 builder.Services.AddControllers();
 
@@ -80,6 +95,30 @@ builder.Services.AddSwaggerGen(options =>
 
     var app = builder.Build();
 
+    // Apply database migrations on startup
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
+        var maxRetries = 5;
+        var retryDelay = TimeSpan.FromSeconds(5);
+        
+        for (var i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                Log.Information("Applying database migrations (attempt {Attempt}/{MaxRetries})...", i + 1, maxRetries);
+                await dbContext.Database.MigrateAsync();
+                Log.Information("Database migrations applied successfully");
+                break;
+            }
+            catch (Exception ex) when (i < maxRetries - 1)
+            {
+                Log.Warning(ex, "Failed to apply migrations, retrying in {Delay} seconds...", retryDelay.TotalSeconds);
+                await Task.Delay(retryDelay);
+            }
+        }
+    }
+
     // Add correlation ID middleware for request tracing
     app.UseCorrelationId();
 
@@ -117,6 +156,8 @@ builder.Services.AddSwaggerGen(options =>
 
     app.UseHttpsRedirection();
 
+    app.UseCors("AllowFrontend");
+
     app.UseAuthorization();
 
     app.MapControllers();
@@ -126,7 +167,7 @@ builder.Services.AddSwaggerGen(options =>
 
     // Map Prometheus metrics endpoint with restricted host access
     var metricsEndpoint = app.MapMetrics();
-    metricsEndpoint.RequireHost("localhost", "127.0.0.1", "[::1]");
+    metricsEndpoint.RequireHost("localhost", "127.0.0.1");
 
     app.Run();
 }

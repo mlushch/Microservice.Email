@@ -1,12 +1,17 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+using Microservice.Email.Infrastructure.Persistence;
 
 #nullable disable
 
 namespace Microservice.Email.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(EmailDbContext))]
+    [Migration("20260207000000_InitialCreate")]
     public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
