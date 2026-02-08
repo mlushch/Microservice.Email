@@ -74,6 +74,7 @@ node_modules/
 ## Production
 /build
 /dist
+client/coverage
 
 ## Misc
 .DS_Store
@@ -99,12 +100,11 @@ Thumbs.db
 .DS_Store
 
 ## Package manager
-package-lock.json
+# package-lock.json should be committed for CI/CD consistency
 yarn.lock
 pnpm-lock.yaml
 
 ## Compiled TypeScript
-*.js
 *.js.map
 !jest.config.js
 !webpack.config.js
