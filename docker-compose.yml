@@ -9,7 +9,7 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=microservice_email;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Database__DefaultConnection=Host=postgres;Port=5432;Database=microservice_email;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - Minio__Endpoint=minio:9000
       - Minio__AccessKey=${MINIO_ACCESS_KEY}
       - Minio__SecretKey=${MINIO_SECRET_KEY}
@@ -18,16 +18,16 @@ services:
       - Minio__TemplatesBucket=templates
       - RabbitMq__HostName=rabbitmq
       - RabbitMq__Port=5672
-      - RabbitMq__Username=${RABBITMQ_USERNAME}
-      - RabbitMq__Password=${RABBITMQ_PASSWORD}
+      - RabbitMq__Username=${RABBITMQ_DEFAULT_USER}
+      - RabbitMq__Password=${RABBITMQ_DEFAULT_PASS}
       - RabbitMq__VirtualHost=/
       - RabbitMq__EmailQueueName=email-queue
       - RabbitMq__TemplatedEmailQueueName=templated-email-queue
       - RabbitMq__UseSsl=false
       - Smtp__Host=mailhog
       - Smtp__Port=1025
-      - Smtp__Username=
-      - Smtp__Password=
+      - Smtp__Username=${SMTP_USERNAME}
+      - Smtp__Password=${SMTP_PASSWORD}
       - Smtp__EnableSsl=false
       - Smtp__DefaultSenderEmail=noreply@example.com
       - Smtp__DefaultSenderName=Email Service

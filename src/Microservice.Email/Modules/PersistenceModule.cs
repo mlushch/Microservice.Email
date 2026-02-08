@@ -28,7 +28,8 @@ public sealed class PersistenceModule : IModule
                     maxRetryCount: databaseSettings?.MaxRetryCount ?? 3,
                     maxRetryDelay: TimeSpan.FromSeconds(databaseSettings?.MaxRetryDelay ?? 30),
                     errorCodesToAdd: null);
-            });
+            })
+            .UseSnakeCaseNamingConvention();
 
             if (databaseSettings?.EnableSensitiveDataLogging == true)
             {
