@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microservice.Email.Core.Interfaces;
 using Microservice.Email.Domain.Contracts;
 
+using Serilog.Context;
+
 namespace Microservice.Email.Infrastructure.Messaging;
 
 /// <summary>
@@ -27,27 +29,31 @@ public sealed class SendTemplatedEmailMessageHandler : IMessageHandler<Attachmen
     /// <inheritdoc />
     public async Task HandleAsync(BusMessage<AttachmentsWrapper<SendTemplatedEmailRequest>> message, CancellationToken cancellationToken = default)
     {
-        this.logger.LogInformation(
-            "Processing templated email message with CorrelationId: {CorrelationId}, TemplateName: {TemplateName}",
-            message.CorrelationId,
-            message.Payload.Email.TemplateName);
-
-        try
+        // Push correlation ID from message to log context
+        using (LogContext.PushProperty("CorrelationId", message.CorrelationId))
         {
-            var response = await this.emailService.SendTemplatedAsync(message.Payload, cancellationToken);
-
             this.logger.LogInformation(
-                "Successfully processed templated email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
+                "Processing templated email message with CorrelationId: {CorrelationId}, TemplateName: {TemplateName}",
                 message.CorrelationId,
-                response.Id);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(
-                ex,
-                "Failed to process templated email message with CorrelationId: {CorrelationId}",
-                message.CorrelationId);
-            throw;
+                message.Payload.Email.TemplateName);
+
+            try
+            {
+                var response = await this.emailService.SendTemplatedAsync(message.Payload, cancellationToken);
+
+                this.logger.LogInformation(
+                    "Successfully processed templated email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
+                    message.CorrelationId,
+                    response.Id);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(
+                    ex,
+                    "Failed to process templated email message with CorrelationId: {CorrelationId}",
+                    message.CorrelationId);
+                throw;
+            }
         }
     }
 }

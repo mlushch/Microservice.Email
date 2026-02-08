@@ -15,13 +15,15 @@ namespace Microservice.Email.Controllers;
 public sealed class EmailController : ControllerBase
 {
     private readonly IEmailService emailService;
+    private readonly ILogger<EmailController> logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EmailController"/> class.
     /// </summary>
-    public EmailController(IEmailService emailService)
+    public EmailController(IEmailService emailService, ILogger<EmailController> logger)
     {
         this.emailService = emailService;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -41,7 +43,16 @@ public sealed class EmailController : ControllerBase
         [FromBody] AttachmentsWrapper<SendEmailRequest> request,
         CancellationToken cancellationToken)
     {
+        this.logger.LogInformation(
+            "Sending plain email to {RecipientCount} recipients",
+            request.Email.Recipients.Length);
+
         var response = await this.emailService.SendAsync(request, cancellationToken);
+
+        this.logger.LogInformation(
+            "Plain email sent successfully with ID {EmailId}",
+            response.Id);
+
         return this.Ok(response);
     }
 
@@ -64,7 +75,18 @@ public sealed class EmailController : ControllerBase
         [FromBody] AttachmentsWrapper<SendTemplatedEmailRequest> request,
         CancellationToken cancellationToken)
     {
+        this.logger.LogInformation(
+            "Sending templated email using template {TemplateName} to {RecipientCount} recipients",
+            request.Email.TemplateName,
+            request.Email.Recipients.Length);
+
         var response = await this.emailService.SendTemplatedAsync(request, cancellationToken);
+
+        this.logger.LogInformation(
+            "Templated email sent successfully with ID {EmailId} using template {TemplateName}",
+            response.Id,
+            request.Email.TemplateName);
+
         return this.Ok(response);
     }
 

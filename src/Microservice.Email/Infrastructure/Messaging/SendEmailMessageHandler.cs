@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microservice.Email.Core.Interfaces;
 using Microservice.Email.Domain.Contracts;
 
+using Serilog.Context;
+
 namespace Microservice.Email.Infrastructure.Messaging;
 
 /// <summary>
@@ -27,26 +29,30 @@ public sealed class SendEmailMessageHandler : IMessageHandler<AttachmentsWrapper
     /// <inheritdoc />
     public async Task HandleAsync(BusMessage<AttachmentsWrapper<SendEmailRequest>> message, CancellationToken cancellationToken = default)
     {
-        this.logger.LogInformation(
-            "Processing email message with CorrelationId: {CorrelationId}",
-            message.CorrelationId);
-
-        try
+        // Push correlation ID from message to log context
+        using (LogContext.PushProperty("CorrelationId", message.CorrelationId))
         {
-            var response = await this.emailService.SendAsync(message.Payload, cancellationToken);
-
             this.logger.LogInformation(
-                "Successfully processed email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
-                message.CorrelationId,
-                response.Id);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(
-                ex,
-                "Failed to process email message with CorrelationId: {CorrelationId}",
+                "Processing email message with CorrelationId: {CorrelationId}",
                 message.CorrelationId);
-            throw;
+
+            try
+            {
+                var response = await this.emailService.SendAsync(message.Payload, cancellationToken);
+
+                this.logger.LogInformation(
+                    "Successfully processed email message with CorrelationId: {CorrelationId}, EmailId: {EmailId}",
+                    message.CorrelationId,
+                    response.Id);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(
+                    ex,
+                    "Failed to process email message with CorrelationId: {CorrelationId}",
+                    message.CorrelationId);
+                throw;
+            }
         }
     }
 }

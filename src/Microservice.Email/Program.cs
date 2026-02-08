@@ -3,10 +3,33 @@ using Microservice.Email.Modules;
 
 using Prometheus;
 
-var builder = WebApplication.CreateBuilder(args);
+using Serilog;
+using Serilog.Events;
 
-// Add services using modules
-builder.Services.AddModules(builder.Configuration);
+// Configure Serilog bootstrap logger for startup
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
+    Log.Information("Starting Microservice.Email application");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Configure Serilog from configuration
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .Enrich.WithThreadId()
+        .Enrich.WithProperty("Application", "Microservice.Email"));
+
+    // Add services using modules
+    builder.Services.AddModules(builder.Configuration);
 
 // Add health checks
 builder.Services.AddHealthChecks();
@@ -47,38 +70,64 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => (type.FullName ?? type.Name).Replace("+", "."));
 });
 
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// Enable Prometheus HTTP request metrics
-app.UseHttpMetrics(options =>
-{
-    options.AddCustomLabel("host", context => context.Request.Host.Host);
-});
+    // Add correlation ID middleware for request tracing
+    app.UseCorrelationId();
 
-// Configure the HTTP request pipeline.
-app.UseGlobalExceptionHandler();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    // Add Serilog request logging
+    app.UseSerilogRequestLogging(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Microservice.Email API v1");
-        options.DisplayRequestDuration();
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+            diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+        };
     });
+
+    // Configure the HTTP request pipeline.
+    // Enable Prometheus HTTP request metrics
+    app.UseHttpMetrics(options =>
+    {
+        options.AddCustomLabel("host", context => context.Request.Host.Host);
+    });
+
+    // Configure the HTTP request pipeline.
+    app.UseGlobalExceptionHandler();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Microservice.Email API v1");
+            options.DisplayRequestDuration();
+        });
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    // Map health check endpoint
+    app.MapHealthChecks("/health");
+
+    // Map Prometheus metrics endpoint with restricted host access
+    var metricsEndpoint = app.MapMetrics();
+    metricsEndpoint.RequireHost("localhost", "127.0.0.1", "[::1]");
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-// Map health check endpoint
-app.MapHealthChecks("/health");
-
-// Map Prometheus metrics endpoint with restricted host access
-var metricsEndpoint = app.MapMetrics();
-metricsEndpoint.RequireHost("localhost", "127.0.0.1", "[::1]");
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.Information("Shutting down Microservice.Email application");
+    Log.CloseAndFlush();
+}
